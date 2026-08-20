@@ -105,6 +105,13 @@ public class MC_26_2 implements PetNMS {
 
     @Override
     @NotNull
+    public LivingEntity createUnspawnedEntity(@NotNull EntityType entityType, @NotNull World world) {
+        Mob mob = EntityInjector.spawn(entityType, ((CraftWorld) world).getHandle());
+        return (LivingEntity) mob.getBukkitEntity();
+    }
+
+    @Override
+    @NotNull
     public ActivePet spawnPet(@NotNull Template template, @NotNull Location location, @NotNull Function<LivingEntity, ActivePet> holderFunction) {
         World bukkitWorld = location.getWorld();
         if (bukkitWorld == null) {

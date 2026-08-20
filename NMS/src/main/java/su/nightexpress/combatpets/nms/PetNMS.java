@@ -1,6 +1,7 @@
 package su.nightexpress.combatpets.nms;
 
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -27,6 +28,15 @@ public interface PetNMS {
 
     default boolean canSpawn(@NotNull EntityType entityType) {
         return this.getSupportedEntities().contains(entityType);
+    }
+
+    @Nullable
+    default LivingEntity createUnspawnedEntity(@NotNull EntityType entityType, @NotNull World world) {
+        Class<? extends Entity> entityClass = entityType.getEntityClass();
+        if (entityClass == null) return null;
+
+        Entity entity = world.createEntity(world.getSpawnLocation(), entityClass);
+        return entity instanceof LivingEntity livingEntity ? livingEntity : null;
     }
 
     //@Deprecated

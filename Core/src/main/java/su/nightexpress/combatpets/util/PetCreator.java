@@ -3,7 +3,6 @@ package su.nightexpress.combatpets.util;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemFlag;
@@ -148,7 +147,7 @@ public class PetCreator {
             petTemplate.setExhaustModifier(ExhaustReason.WALK, 0.02);
             petTemplate.setExhaustModifier(ExhaustReason.COMBAT, 0.04);
             petTemplate.setFoodCategories(getFoodCategories(entityType));
-            setExtras(petTemplate);
+            setExtras(petTemplate, nms);
             petTemplate.save();
 		}
     }
@@ -464,14 +463,11 @@ public class PetCreator {
         };
     }
 
-    private static void setExtras(@NotNull PetTemplate petTemplate) {
+    private static void setExtras(@NotNull PetTemplate petTemplate, @NotNull PetNMS nms) {
         EntityType entityType = petTemplate.getEntityType();
-        Class<? extends Entity> clazz = entityType.getEntityClass();
-        if (clazz == null) return;
-
         World world = Bukkit.getWorlds().getFirst();
-        Entity entity = world.createEntity(world.getSpawnLocation(), clazz);
-        if (!(entity instanceof LivingEntity livingEntity)) return;
+        LivingEntity livingEntity = nms.createUnspawnedEntity(entityType, world);
+        if (livingEntity == null) return;
 
         double maxHealth = Math.max(10D, EntityUtil.getAttribute(livingEntity, Attribute.MAX_HEALTH));
 
