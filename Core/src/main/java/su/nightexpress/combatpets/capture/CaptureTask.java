@@ -96,7 +96,7 @@ public final class CaptureTask {
 
         Location location = this.entity.getLocation();
         location.setYaw(Rnd.get(360));
-        this.entity.teleport(location);
+        this.entity.teleportAsync(location);
 
         boolean random = this.resultPredefined() ? Rnd.nextBoolean() == this.shouldWin : Rnd.chance(this.template.getCaptureChance());
 

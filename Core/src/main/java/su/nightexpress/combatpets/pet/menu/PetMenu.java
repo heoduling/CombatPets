@@ -14,6 +14,7 @@ import su.nightexpress.combatpets.config.Config;
 import su.nightexpress.combatpets.data.impl.PetUser;
 import su.nightexpress.combatpets.pet.AttributeRegistry;
 import su.nightexpress.combatpets.util.PetUtils;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.menu.MenuOptions;
 import su.nightexpress.nightcore.menu.MenuSize;
@@ -50,7 +51,7 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
         
         this.addHandler(this.despawnHandler = new ItemHandler("pet_return", (viewer, event) -> {
             plugin.getPetManager().despawnPet(viewer.getPlayer());
-            plugin.runTask(task -> viewer.getPlayer().closeInventory());
+            PetScheduler.runAtEntity(plugin, viewer.getPlayer(), viewer.getPlayer()::closeInventory);
         }));
 
         this.addHandler(this.renameHandler = new ItemHandler("pet_rename", (viewer, event) -> {
@@ -98,7 +99,7 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
 
 
         this.addHandler(this.aspectsHandler = new ItemHandler("pet_aspects", (viewer, event) -> {
-            this.runNextTick(() -> plugin.getPetManager().openAspectsMenu(viewer.getPlayer()));
+            PetScheduler.runAtEntity(plugin, viewer.getPlayer(), () -> plugin.getPetManager().openAspectsMenu(viewer.getPlayer()));
         }));
 
 

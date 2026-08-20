@@ -22,7 +22,7 @@ public class LlamaColorVariantHandler extends EnumVariantHandler<Llama.Color> {
 
     @Override
     @NotNull
-    public String getLocalized(Llama.@NotNull Color value) {
+    public String getLocalized(Llama.Color value) {
         return Lang.LLAMA_COLOR.getLocalized(value);
     }
 

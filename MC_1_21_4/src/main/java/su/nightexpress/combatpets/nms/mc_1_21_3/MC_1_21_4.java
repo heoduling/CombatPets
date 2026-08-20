@@ -1,6 +1,7 @@
 package su.nightexpress.combatpets.nms.mc_1_21_3;
 
 import net.minecraft.core.Holder;
+import net.minecraft.network.Connection;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
@@ -23,6 +24,7 @@ import org.bukkit.craftbukkit.v1_21_R3.CraftWorld;
 import org.bukkit.craftbukkit.v1_21_R3.damage.CraftDamageSource;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_21_R3.entity.CraftLivingEntity;
+import org.bukkit.craftbukkit.v1_21_R3.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
@@ -37,11 +39,63 @@ import su.nightexpress.combatpets.nms.mc_1_21_3.goals.follow.PetLookAtOwnerGoal;
 import su.nightexpress.nightcore.util.Reflex;
 
 import java.util.HashMap;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Consumer;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.ChannelPromise;
 
 public class MC_1_21_4 implements PetNMS {
+
+    @Override
+    public void listenForTeleports(@NotNull org.bukkit.entity.Player player, @NotNull Consumer<org.bukkit.entity.Player> callback) {
+        Channel channel = getChannel(player);
+        if (channel == null) return;
+        ChannelPipeline pipeline = channel.pipeline();
+        if (pipeline.get("combatpets_teleport") != null) return;
+        for (String key : pipeline.toMap().keySet()) {
+            if (pipeline.get(key) instanceof net.minecraft.network.Connection) {
+                pipeline.addBefore(key, "combatpets_teleport", new ChannelDuplexHandler() {
+                    @Override
+                    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                        if (msg != null && msg.getClass().getSimpleName().equals("ClientboundPlayerPositionPacket")) callback.accept(player);
+                        super.write(ctx, msg, promise);
+                    }
+                });
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void stopListeningForTeleports(@NotNull org.bukkit.entity.Player player) {
+        Channel channel = getChannel(player);
+        if (channel == null) return;
+        if (channel.pipeline().get("combatpets_teleport") != null) channel.pipeline().remove("combatpets_teleport");
+    }
+
+    @Nullable
+    private static Channel getChannel(@NotNull org.bukkit.entity.Player player) {
+        Object listener = ((CraftPlayer) player).getHandle().connection;
+        for (Class<?> type = listener.getClass(); type != null; type = type.getSuperclass()) {
+            for (Field field : type.getDeclaredFields()) {
+                if (!Connection.class.isAssignableFrom(field.getType())) continue;
+                try {
+                    field.setAccessible(true);
+                    Connection connection = (Connection) field.get(listener);
+                    return connection == null ? null : connection.channel;
+                }
+                catch (IllegalAccessException ignored) {
+                }
+            }
+        }
+        return null;
+    }
 
     public MC_1_21_4() {
         EntityInjector.register();

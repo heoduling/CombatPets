@@ -1,6 +1,5 @@
 package su.nightexpress.combatpets.pet.listener;
 
-import org.bukkit.Location;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.PetsPlugin;
 import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.pet.PetManager;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.manager.AbstractListener;
 
 public class PlayerGenericListener extends AbstractListener<PetsPlugin> {
@@ -21,6 +21,13 @@ public class PlayerGenericListener extends AbstractListener<PetsPlugin> {
     public PlayerGenericListener(@NotNull PetsPlugin plugin, @NotNull PetManager petManager) {
         super(plugin);
         this.petManager = petManager;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        this.plugin.getPetNMS().listenForTeleports(player, target ->
+            PetScheduler.runAtEntity(this.plugin, target, () -> this.handleTeleportPacket(target)));
     }
 
 //    @EventHandler(priority = EventPriority.HIGHEST)
@@ -69,26 +76,25 @@ public class PlayerGenericListener extends AbstractListener<PetsPlugin> {
         ActivePet activePet = this.petManager.getPlayerPet(player);
         if (activePet == null) return;
 
-        this.plugin.getPetNMS().sneak(activePet.getEntity(), event.isSneaking());
+        PetScheduler.runAtEntity(this.plugin, activePet.getEntity(), () ->
+            this.plugin.getPetNMS().sneak(activePet.getEntity(), event.isSneaking()));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerTeleport(PlayerTeleportEvent event) {
-        Player player = event.getPlayer();
-        Location from = event.getFrom();
-        Location to = event.getTo();
-        if (to == null) return;
-
+    private void handleTeleportPacket(@NotNull Player player) {
         ActivePet activePet = this.petManager.getPlayerPet(player);
         if (activePet == null) return;
 
-        if (from.getWorld() != to.getWorld()) {
-            this.petManager.removePet(activePet);
-            this.plugin.runTask(task -> this.petManager.spawnPet(player, activePet.getTier(), activePet.getTemplate()));
-            return;
-        }
+        java.util.UUID playerWorldId = player.getWorld().getUID();
+        PetScheduler.runAtEntity(this.plugin, activePet.getEntity(), () -> {
+            if (!activePet.getEntity().getWorld().getUID().equals(playerWorldId)) {
+                this.petManager.removePet(activePet);
+                PetScheduler.runAtEntity(this.plugin, player, () ->
+                    this.petManager.spawnPet(player, activePet.getTier(), activePet.getTemplate()));
+                return;
+            }
 
-        this.plugin.runTaskLater(task -> activePet.moveToOwner(), 5L);
+            PetScheduler.runAtEntityLater(this.plugin, activePet.getEntity(), activePet::moveToOwner, 5L);
+        });
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -99,6 +105,7 @@ public class PlayerGenericListener extends AbstractListener<PetsPlugin> {
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerQuit(PlayerQuitEvent event) {
+        this.plugin.getPetNMS().stopListeningForTeleports(event.getPlayer());
         this.petManager.despawnPet(event.getPlayer());
     }
 }

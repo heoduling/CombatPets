@@ -113,7 +113,7 @@ public class EntityInjector {
         if (entity == null) return null;
 
         world.addFreshEntity(entity, null);
-        entity.getBukkitEntity().teleport(location);
+        entity.getBukkitEntity().teleportAsync(location);
 
         return entity;
     }

@@ -22,7 +22,7 @@ public class HorseColorVariantHandler extends EnumVariantHandler<Horse.Color> {
 
     @Override
     @NotNull
-    public String getLocalized(Horse.@NotNull Color value) {
+    public String getLocalized(Horse.Color value) {
         return Lang.HORSE_COLOR.getLocalized(value);
     }
 

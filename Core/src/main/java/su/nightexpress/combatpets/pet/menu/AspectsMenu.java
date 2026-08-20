@@ -13,6 +13,7 @@ import su.nightexpress.combatpets.config.Config;
 import su.nightexpress.combatpets.config.Lang;
 import su.nightexpress.combatpets.pet.AttributeRegistry;
 import su.nightexpress.combatpets.util.PetUtils;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.core.config.CoreLang;
@@ -56,7 +57,7 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
         super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
 
         this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
-            this.runNextTick(() -> plugin.getPetManager().openPetMenu(viewer.getPlayer()));
+            PetScheduler.runAtEntity(plugin, viewer.getPlayer(), () -> plugin.getPetManager().openPetMenu(viewer.getPlayer()));
         }));
 
         this.addHandler(this.reallocateHandler = new ItemHandler("reallocate_points", (viewer, event) -> {
@@ -64,10 +65,11 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
             ActivePet petHolder = PetEntityBridge.getByPlayer(player);
             if (petHolder == null) return;
 
-            petHolder.reallocateAspects();
-            petHolder.update();
-
-            this.runNextTick(() -> this.flush(viewer));
+            PetScheduler.runAtEntity(plugin, petHolder.getEntity(), () -> {
+                petHolder.reallocateAspects();
+                petHolder.update();
+                PetScheduler.runAtEntity(plugin, player, () -> this.flush(viewer));
+            });
         }));
 
         this.load();
@@ -128,7 +130,7 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
                         double perAspect = petHolder.getTemplate().getAttributePerAspect(attribute);
                         if (perAspect == 0D) continue;
 
-                        double total = petHolder.getAttribute(attribute);//petHolder.getAttributeValue(attribute);
+                        double total = petHolder.getStoredAttribute(attribute);
 
                         attributes.add(line
                             .replace(GENERIC_NAME, attribute.getDisplayName())
@@ -163,11 +165,13 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
             int aspectPoints = holder.getAspectPoints();
             if (aspectPoints <= 0 || aspectValue >= holder.getTier().getAspectMax(aspect)) return;
 
-            holder.setAspectValue(aspect, aspectValue + 1);
-            holder.setAspectPoints(holder.getAspectPoints() - 1);
-
-            holder.update();
-            this.runNextTick(() -> this.flush(viewer));
+            Player viewerPlayer = viewer1.getPlayer();
+            PetScheduler.runAtEntity(this.plugin, holder.getEntity(), () -> {
+                holder.setAspectValue(aspect, aspectValue + 1);
+                holder.setAspectPoints(holder.getAspectPoints() - 1);
+                holder.update();
+                PetScheduler.runAtEntity(this.plugin, viewerPlayer, () -> this.flush(viewer1));
+            });
         });
     }
 

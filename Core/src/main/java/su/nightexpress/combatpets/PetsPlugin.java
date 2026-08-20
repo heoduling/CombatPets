@@ -17,6 +17,7 @@ import su.nightexpress.combatpets.level.LevelingManager;
 import su.nightexpress.combatpets.level.command.LevelingCommands;
 import su.nightexpress.combatpets.nms.PetNMS;
 import su.nightexpress.combatpets.nms.mc_1_21_10.MC_1_21_10;
+import su.nightexpress.combatpets.nms.mc_26_2.MC_26_2;
 import su.nightexpress.combatpets.nms.mc_1_21_3.MC_1_21_4;
 import su.nightexpress.combatpets.nms.mc_1_21_5.MC_1_21_5;
 import su.nightexpress.combatpets.nms.mc_1_21_8.MC_1_21_8;
@@ -25,6 +26,7 @@ import su.nightexpress.combatpets.shop.ShopManager;
 import su.nightexpress.combatpets.shop.command.ShopCommands;
 import su.nightexpress.combatpets.wardrobe.WardrobeManager;
 import su.nightexpress.combatpets.wardrobe.command.WardrobeCommands;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.NightPlugin;
 import su.nightexpress.nightcore.commands.command.NightCommand;
 import su.nightexpress.nightcore.config.PluginDetails;
@@ -67,6 +69,7 @@ public class PetsPlugin extends NightPlugin {
 
     @Override
     public void enable() {
+        PetScheduler.initialize();
         PetAPI.setup(this);
 
         if (!this.setupNMS()) {
@@ -165,6 +168,7 @@ public class PetsPlugin extends NightPlugin {
             case MC_1_21_5 -> this.petNMS = new MC_1_21_5();
             case MC_1_21_8 -> this.petNMS = new MC_1_21_8();
             case MC_1_21_10 -> this.petNMS = new MC_1_21_10();
+            case MC_26_2 -> this.petNMS = new MC_26_2();
         }
         return this.petNMS != null;
     }

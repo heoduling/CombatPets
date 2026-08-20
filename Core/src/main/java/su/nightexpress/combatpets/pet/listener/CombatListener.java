@@ -13,6 +13,7 @@ import su.nightexpress.combatpets.PetsPlugin;
 import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.config.Config;
 import su.nightexpress.combatpets.pet.PetManager;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.combatpets.util.PetUtils;
 import su.nightexpress.nightcore.manager.AbstractListener;
 
@@ -41,7 +42,7 @@ public class CombatListener extends AbstractListener<PetsPlugin> {
 
         activePet.onIncomingDamage();
 
-        this.plugin.runTask(task -> {
+        PetScheduler.runAtEntity(this.plugin, activePet.getEntity(), () -> {
             activePet.updateName();
             activePet.updateHealthBar();
         });

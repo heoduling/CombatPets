@@ -53,6 +53,11 @@ public interface ActivePet extends Placeholder, InventoryHolder {
 
     double getAttribute(@NotNull Stat attribute);
 
+    /**
+     * Returns the persistent attribute value without accessing the live entity.
+     */
+    double getStoredAttribute(@NotNull Stat attribute);
+
     double getAttackDamage();
 
     double getMaxSaturation();

@@ -393,6 +393,11 @@ public final class PetInstance implements ActivePet {
     }
 
     @Override
+    public double getStoredAttribute(@NotNull Stat attribute) {
+        return this.data.getAttributeValue(attribute);
+    }
+
+    @Override
     public double getAttackDamage() {
         return this.getAttribute(AttributeRegistry.ATTACK_DAMAGE);
     }
@@ -495,7 +500,7 @@ public final class PetInstance implements ActivePet {
 
     @Override
     public void moveToOwner() {
-        this.entity.teleport(this.getOwner().getLocation());
+        this.entity.teleportAsync(this.getOwner().getLocation());
     }
 
     public void resetLeveling() {

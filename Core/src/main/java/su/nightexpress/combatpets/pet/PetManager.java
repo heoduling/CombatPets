@@ -37,6 +37,7 @@ import su.nightexpress.combatpets.pet.listener.PetGenericListener;
 import su.nightexpress.combatpets.pet.listener.PlayerGenericListener;
 import su.nightexpress.combatpets.pet.menu.*;
 import su.nightexpress.combatpets.util.PetCreator;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.combatpets.util.PetUtils;
 import su.nightexpress.nightcore.bridge.currency.Currency;
 import su.nightexpress.nightcore.config.FileConfig;
@@ -235,13 +236,19 @@ public class PetManager extends AbstractManager<PetsPlugin> {
     }
 
     public void regeneratePets() {
-        getActivePets().forEach(holder -> {
-            holder.doRegenerate(EntityRegainHealthEvent.RegainReason.REGEN);
-        });
+        this.runForActivePets(holder -> holder.doRegenerate(EntityRegainHealthEvent.RegainReason.REGEN));
     }
 
     public void tickPets() {
-        getActivePets().forEach(ActivePet::tickPet);
+        this.runForActivePets(ActivePet::tickPet);
+    }
+
+    private void runForActivePets(@NotNull java.util.function.Consumer<ActivePet> action) {
+        getActivePets().forEach(holder -> PetScheduler.runAtEntity(this.plugin, holder.getEntity(), () -> {
+            if (this.plugin.isEnabled()) {
+                action.accept(holder);
+            }
+        }));
     }
 
     @NotNull

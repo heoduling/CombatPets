@@ -23,11 +23,17 @@
             <artifactId>spigot</artifactId>
             <version>1.21.4-R0.1-SNAPSHOT</version>
             <classifier>remapped-mojang</classifier>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.spigotmc</groupId>
+                    <artifactId>spigot-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
             <version>1.21.4-R0.1-SNAPSHOT</version>
         </dependency>
 

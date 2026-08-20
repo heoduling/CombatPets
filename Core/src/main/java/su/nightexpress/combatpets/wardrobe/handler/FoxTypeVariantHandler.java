@@ -22,7 +22,7 @@ public class FoxTypeVariantHandler extends EnumVariantHandler<Fox.Type> {
 
     @Override
     @NotNull
-    public String getLocalized(Fox.@NotNull Type value) {
+    public String getLocalized(Fox.Type value) {
         return Lang.FOX_TYPE.getLocalized(value);
     }
 

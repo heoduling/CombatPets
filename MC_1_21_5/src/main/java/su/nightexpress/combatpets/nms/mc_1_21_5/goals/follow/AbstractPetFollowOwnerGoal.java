@@ -69,6 +69,6 @@ public abstract class AbstractPetFollowOwnerGoal extends Goal {
 
     public void moveToOwner() {
         this.pet.setTarget(null);
-        this.pet.getBukkitEntity().teleport(this.owner.getBukkitEntity());
+        this.pet.getBukkitEntity().teleportAsync(this.owner.getBukkitEntity().getLocation());
     }
 }

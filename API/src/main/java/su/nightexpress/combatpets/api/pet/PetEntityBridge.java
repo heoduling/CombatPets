@@ -6,12 +6,16 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class PetEntityBridge {
 
-    public static final Map<PetEntity, ActivePet> BY_PET = new WeakHashMap<>();
-    public static final Map<UUID, ActivePet>      BY_ID  = new HashMap<>();
+    /** Active pets can be queried from multiple Folia region threads. */
+    public static final ConcurrentMap<PetEntity, ActivePet> BY_PET = new ConcurrentHashMap<>();
+    public static final ConcurrentMap<UUID, ActivePet>      BY_ID  = new ConcurrentHashMap<>();
 
     public static ActivePet getByPet(@NotNull PetEntity entity) {
         return BY_PET.get(entity);
@@ -41,7 +45,7 @@ public class PetEntityBridge {
 
     @NotNull
     public static Collection<ActivePet> getAll() {
-        return new HashSet<>(BY_PET.values());
+        return java.util.Set.copyOf(BY_PET.values());
     }
 
     public static void addHolder(@NotNull PetEntity entity, @NotNull ActivePet holder) {
