@@ -12,6 +12,7 @@ import su.nightexpress.combatpets.config.Lang;
 import su.nightexpress.combatpets.config.Perms;
 import su.nightexpress.combatpets.data.impl.PetData;
 import su.nightexpress.combatpets.data.impl.PetUser;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.commands.Arguments;
 import su.nightexpress.nightcore.commands.Commands;
 import su.nightexpress.nightcore.commands.builder.HubNodeBuilder;
@@ -75,11 +76,11 @@ public class AspectPointsCommands {
             .permission(permission)
             .withArguments(
                 Arguments.integer(CommandArguments.AMOUNT, 1)
-                .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT)
+                .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
                 .suggestions((reader, context) -> Lists.newList("1", "10", "100")),
                 CommandArguments.tierArgument(plugin),
                 CommandArguments.templateArgument(plugin),
-                Arguments.playerName(CommandArguments.PLAYER).optional()
+                Arguments.playerName(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER).optional()
             )
             .executes((context, arguments) -> changePoints(plugin, context, arguments, mode));
     }
@@ -93,9 +94,9 @@ public class AspectPointsCommands {
             .permission(permission)
             .withArguments(
                 Arguments.integer(CommandArguments.AMOUNT)
-                    .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT)
+                    .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
                     .suggestions((reader, context) -> Lists.newList("1", "10", "100")),
-                Arguments.player(CommandArguments.PLAYER)
+                Arguments.player(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER)
             )
             .executes((context, arguments) -> rewardPoints(plugin, context, arguments, mode));
     }
@@ -179,14 +180,18 @@ public class AspectPointsCommands {
         MessageLocale message;
         if (mode == Mode.ADD) {
             message = Lang.COMMAND_ASPECT_POINTS_REWARD_DONE;
-            activePet.addAspectPoints(amount);
+            PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                activePet.addAspectPoints(amount);
+                plugin.getUserManager().save(user);
+            });
         }
         else {
             message = Lang.COMMAND_ASPECT_POINTS_PENALTY_DONE;
-            activePet.removeAspectPoints(amount);
+            PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                activePet.removeAspectPoints(amount);
+                plugin.getUserManager().save(user);
+            });
         }
-
-        plugin.getUserManager().save(user);
 
         context.send(message, replacer -> replacer
             .replace(Placeholders.forPlayer(player))

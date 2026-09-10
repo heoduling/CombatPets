@@ -123,6 +123,8 @@ public class GhastPet extends Ghast implements PetEntity {
 
         @Override
         public boolean canUse() {
+            if (!this.refreshOwner() || !this.owner.isAlive()) return false;
+
             LivingEntity target = this.pet.getTarget();
             if (target != null && target.isAlive()) {
                 return this.pet.distanceToSqr(target) >= 512D;
@@ -153,28 +155,13 @@ public class GhastPet extends Ghast implements PetEntity {
 
         @Override
         public boolean canContinueToUse() {
-            LivingEntity target = this.pet.getTarget();
-            if (target != null && target.isAlive()) {
-                return this.pet.distanceToSqr(target) >= 512D;
-            }
-
-            return true;
-        }
-
-        @Override
-        public void start() {//tick() {
-            LivingEntity follow = this.owner;
-            LivingEntity target = this.pet.getTarget();
-            if (target != null && target.isAlive()) {
-                follow = target;
-            }
-
-            this.pet.getNavigation().moveTo(follow, 1D);
-            this.pet.lookAt(this.owner, 30f, 30f);
+            return this.canUse();
         }
 
         @Override
         public void tick() {//start() {
+            if (!this.refreshOwner() || !this.owner.isAlive()) return;
+
             LivingEntity follow = this.owner;
             LivingEntity target = this.pet.getTarget();
             if (target != null && target.isAlive()) {

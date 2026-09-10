@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.PetsPlugin;
@@ -31,15 +32,26 @@ public class ItemListener extends AbstractListener<PetsPlugin> {
         ItemType type = this.manager.getItemType(itemStack);
         if (type == null) return;
 
+        Player player = event.getPlayer();
+        Action action = event.getAction();
+
+        if (action == Action.LEFT_CLICK_AIR || action == Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
+
+        if (!Players.isBedrock(player)) {
+            if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) return;
+        }
+
         event.setUseInteractedBlock(Event.Result.DENY);
         event.setUseItemInHand(Event.Result.DENY);
 
-        Player player = event.getPlayer();
-
-        if (!Players.isBedrock(player)) {
-            if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        }
-
         this.manager.onItemUse(player, itemStack, type);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        this.manager.migrateEggs(player.getInventory(), player.getEnderChest());
     }
 }

@@ -63,8 +63,14 @@ public class PetEntityBridge {
     }*/
 
     public static void removeHolder(@NotNull ActivePet holder) {
-        BY_PET.values().remove(holder);
-        BY_ID.remove(holder.getEntity().getUniqueId());
-        BY_ID.remove(holder.getOwner().getUniqueId());
+        BY_PET.entrySet().removeIf(entry -> entry.getValue() == holder);
+        BY_ID.remove(holder.getEntity().getUniqueId(), holder);
+        BY_ID.remove(holder.getOwner().getUniqueId(), holder);
+    }
+
+    /** Removes a retired pet without reading either retired entity. */
+    public static void removeRetiredHolder(@NotNull ActivePet holder) {
+        BY_PET.entrySet().removeIf(entry -> entry.getValue() == holder);
+        BY_ID.entrySet().removeIf(entry -> entry.getValue() == holder);
     }
 }

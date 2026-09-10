@@ -9,7 +9,6 @@ import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.data.impl.PetData;
 import su.nightexpress.combatpets.data.impl.PetUser;
 import su.nightexpress.combatpets.data.serialize.PetDataSerializer;
-import su.nightexpress.combatpets.util.PetUtils;
 import su.nightexpress.nightcore.db.AbstractUserDataManager;
 import su.nightexpress.nightcore.db.sql.column.Column;
 import su.nightexpress.nightcore.db.sql.column.ColumnType;
@@ -17,6 +16,7 @@ import su.nightexpress.nightcore.db.sql.query.impl.SelectQuery;
 import su.nightexpress.nightcore.db.sql.query.type.ValuedQuery;
 
 import java.sql.ResultSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
@@ -48,7 +48,7 @@ public class DataHandler extends AbstractUserDataManager<PetsPlugin, PetUser> {
 
         user.load(pets);
 
-        this.plugin.info("Pets loaded for " + user.getName());
+        this.plugin.info("已加载玩家 " + user.getName() + " 的宠物数据。");
     }*/
 
     private void synchronizePets(@NotNull PetUser user) {
@@ -67,7 +67,7 @@ public class DataHandler extends AbstractUserDataManager<PetsPlugin, PetUser> {
         for (PetData petData : fresh.getPets().values()) {
             if (petData.getTemplate().getId().equalsIgnoreCase(activeId)) continue;
 
-            user.getPets().put(PetUtils.getPetKey(petData.getTier(), petData.getTemplate()), petData);
+            user.putPet(petData);
         }
     }
 
@@ -84,7 +84,13 @@ public class DataHandler extends AbstractUserDataManager<PetsPlugin, PetUser> {
 
     @Override
     protected void addUpsertQueryData(@NotNull ValuedQuery<?, PetUser> query) {
-        query.setValue(COLUMN_PETS, user -> GSON.toJson(user.getPets()));
+        query.setValue(COLUMN_PETS, user -> GSON.toJson(user.getPetsSnapshot()));
+    }
+
+    /** Keeps the final lifecycle flush ordered after any in-flight autosave. */
+    @Override
+    public synchronized void saveUsersFully(@NotNull Collection<PetUser> users) {
+        super.saveUsersFully(users);
     }
 
     @Override

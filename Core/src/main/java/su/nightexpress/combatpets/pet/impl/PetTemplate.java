@@ -14,6 +14,7 @@ import su.nightexpress.combatpets.api.pet.type.ExhaustReason;
 import su.nightexpress.combatpets.config.Perms;
 import su.nightexpress.combatpets.pet.AttributeRegistry;
 import su.nightexpress.combatpets.util.PetUtils;
+import su.nightexpress.combatpets.util.PetCreator;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.language.LangAssets;
@@ -66,18 +67,18 @@ public class PetTemplate extends AbstractFileData<PetsPlugin> implements Templat
     protected boolean onLoad(@NotNull FileConfig config) {
         this.setEntityType(ConfigValue.create("Entity_Type",
             EntityType.class, EntityType.UNKNOWN,
-            "Sets pet mob type.",
+            "宠物对应的生物类型。",
             Placeholders.WIKI_PET_TYPES_URL
         ).read(config));
 
         if (!this.plugin.getPetNMS().canSpawn(this.getEntityType())) {
-            this.plugin.warn("Invalid entity type for the '" + this.getFile().getName() + "' pet!");
+            this.plugin.warn("宠物配置 '" + this.getFile().getName() + "' 使用了无效的生物类型！");
             return false;
         }
 
         this.setDefaultName(ConfigValue.create("Default_Name",
-            LangAssets.get(this.entityType),
-            "Sets default pet name when obtained."
+            this.plugin.getDetails().getLanguage().equalsIgnoreCase("zh") ? PetCreator.getEntityName(this.entityType) : LangAssets.get(this.entityType),
+            "获得宠物时使用的默认名称。"
         ).read(config));
 
         String oldTexture = config.getString("Egg_Texture");
@@ -87,67 +88,73 @@ public class PetTemplate extends AbstractFileData<PetsPlugin> implements Templat
             config.remove("Egg_Texture");
         }
 
-        this.setEggTexture(ConfigValue.create("Egg_Skin",
+        String eggTexture = ConfigValue.create("Egg_Skin",
             "e4aacb8a36e227d861ea44366ce3b3510ee7c2722c4ea51b2f2e83749bf124",
-            "Texture URL value for pet egg item.",
-            "Get some at http://minecraft-heads.com"
-        ).read(config));
+            "宠物蛋物品使用的头颅纹理值。",
+            "可在 http://minecraft-heads.com 获取纹理"
+        ).read(config);
+
+        if (this.entityType.name().equals("SULFUR_CUBE") && eggTexture.equals(PetCreator.SULFUR_CUBE_LEGACY_EGG_SKIN)) {
+            eggTexture = PetCreator.SULFUR_CUBE_EGG_SKIN;
+            config.set("Egg_Skin", eggTexture);
+        }
+        this.setEggTexture(eggTexture);
 
         this.setInventory(ConfigValue.create("Can_Have_Inventory",
             true,
-            "Sets whether or not this pet can have an inventory.",
-            "Setting this to 'false' will disable inventory for this pet ignoring it's tier inventory option."
+            "该宠物是否可以拥有背包。",
+            "设为 false 后，无论品质配置如何，该宠物都无法使用背包。"
         ).read(config));
 
         this.setEquipment(ConfigValue.create("Can_Have_Equipment",
             true,
-            "Sets whether or not this pet can wear items in his equipment slots.",
-            "Setting this to 'false' will disable equipment for this pet ignoring it's tier equipment option."
+            "该宠物是否可以在装备槽中穿戴物品。",
+            "设为 false 后，无论品质配置如何，该宠物都无法穿戴装备。"
         ).read(config));
 
         this.setCapturable(ConfigValue.create("Catchable",
             true,
-            "Sets whether or not this pet can be captured by a player.",
-            "Setting this to 'false' will disable capture for this pet ignoring it's tier capture options."
+            "该类型生物是否可以被玩家捕捉为宠物。",
+            "设为 false 后，无论品质配置如何，该类型都无法被捕捉。"
         ).read(config));
 
         this.setCaptureChance(ConfigValue.create("Capture.Chance",
             30D,
-            "Sets the capture chance for this type of pet."
+            "该类型宠物的基础捕捉成功率。"
         ).read(config));
 
         this.setCaptureEscapeChance(ConfigValue.create("Capture.Escape_Chance",
             0.5D,
-            "Sets the chance to escape capturing for this type of pet."
+            "该类型生物在捕捉过程中逃脱的概率。"
         ).read(config));
 
         this.setEatSound(ConfigValue.create("Saturation.Eat_Sound",
             NightSound.of(Sound.ENTITY_GENERIC_EAT),
-            "Sets sound to play when pet ates food item."
+            "宠物进食时播放的音效。"
         ).read(config));
 
         this.setSpawnParticle(ConfigValue.create("Spawn_Particle",
             UniParticle.of(Particle.CLOUD),
-            "Sets particle effect for pet spawn."
+            "召唤宠物时播放的粒子效果。"
         ).read(config));
 
         this.setDespawnParticle(ConfigValue.create("Despawn_Particle",
             UniParticle.of(Particle.ASH),
-            "Sets particle effect for pet despawn."
+            "收回宠物时播放的粒子效果。"
         ).read(config));
 
         this.exhaustModifier.putAll(ConfigValue.create("Saturation.Exhaust",
             (cfg, path, def) -> Stream.of(ExhaustReason.values()).collect(Collectors.toMap(reason -> reason, amount -> cfg.getDouble(path + "." + amount.name()))),
             (cfg, path, map) -> map.forEach((reason, amount) -> cfg.set(path + "." + reason.name(), amount)),
             () -> Map.of(ExhaustReason.IDLE, 0.01, ExhaustReason.WALK, 0.02, ExhaustReason.COMBAT, 0.04),
-            "Sets amount of saturation to lost on every tick for certain pet state."
+            "宠物处于各状态时每刻消耗的饱食度。"
         ).read(config));
 
         this.setFoodCategories(ConfigValue.create("Saturation.FoodCategories",
             new HashSet<>(),
-            "List of food categories available to feed this pet.",
-            "You can create or edit them in the main plugin config file.",
-            "Available categories: [" + String.join(", ", plugin.getPetManager().getFoodCategoryNames()) + "]",
+            "可以喂给该宠物的食物类别列表。",
+            "可在插件主配置文件中创建或编辑食物类别。",
+            "可用类别：[" + String.join(", ", plugin.getPetManager().getFoodCategoryNames()) + "]",
             Placeholders.WIKI_FOOD_URL
         ).read(config));
 
@@ -164,7 +171,7 @@ public class PetTemplate extends AbstractFileData<PetsPlugin> implements Templat
                 AttributeRegistry.HEALTH_REGENEATION_FORCE, 0.5D,
                 AttributeRegistry.HEALTH_REGENEATION_SPEED, 3.5D
             ),
-            "Default (initial) attribute values for this pet.",
+            "该宠物的默认（初始）属性值。",
             Placeholders.WIKI_ATTRIBUTES_URL
         ).read(config));
 
@@ -181,7 +188,7 @@ public class PetTemplate extends AbstractFileData<PetsPlugin> implements Templat
                 AttributeRegistry.HEALTH_REGENEATION_FORCE, 0.05D,
                 AttributeRegistry.HEALTH_REGENEATION_SPEED, -0.01D
             ),
-            "Attribute values added per each aspect value.",
+            "每增加一点对应属性点时追加的属性值。",
             Placeholders.WIKI_ATTRIBUTES_URL,
             Placeholders.WIKI_ASPECTS_URL
         ).read(config));

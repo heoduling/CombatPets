@@ -3,12 +3,11 @@ package su.nightexpress.combatpets.nms.mc_26_2.goals.follow;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.api.pet.PetEntity;
+import su.nightexpress.combatpets.nms.mc_26_2.brain.PetAI;
 import su.nightexpress.nightcore.util.random.Rnd;
 
 import java.util.EnumSet;
@@ -36,20 +35,26 @@ public class PetLookAtOwnerGoal extends Goal {
 
         double chance = 2D;
 
-        Player owner = this.holder.getOwner();
-        ItemStack item = owner.getInventory().getItemInMainHand();
+        net.minecraft.server.level.ServerPlayer owner = PetAI.getLocalOwner(this.holder);
+        if (owner == null) {
+            this.holder.moveToOwner();
+            return false;
+        }
+
+        ItemStack item = owner.getBukkitEntity().getInventory().getItemInMainHand();
         if (this.holder.getTemplate().isFood(item)) {
             chance = 100D;
         }
 
         if (!Rnd.chance(chance)) return false;
 
-        this.lookAt = ((CraftPlayer) owner).getHandle();
+        this.lookAt = owner;
         return true;
     }
 
     @Override
     public boolean canContinueToUse() {
+        if (PetAI.getLocalOwner(this.holder) != this.lookAt) return false;
         if (!this.lookAt.isAlive()) return false;
         if (this.pet.distanceToSqr(this.lookAt) > (double) (this.lookDistance * this.lookDistance)) return false;
 

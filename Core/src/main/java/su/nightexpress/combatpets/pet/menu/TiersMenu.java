@@ -84,7 +84,7 @@ public class TiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Tier
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Pet Collection (Tiers)"), MenuSize.CHEST_36);
+        return Config.createMenuOptions(BLACK.enclose("宠物收藏 - 选择品质"), MenuSize.CHEST_36);
     }
 
     @Override
@@ -94,19 +94,19 @@ public class TiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Tier
 
         ItemStack backItem = ItemUtil.getSkinHead(SKIN_WRONG_MARK);
         ItemUtil.editMeta(backItem, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_EXIT.getName());
+            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("关闭")));
         });
         list.add(new MenuItem(backItem).setSlots(31).setPriority(10).setHandler(ItemHandler.forClose(this)));
 
         ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_PREVIOUS_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("← 上一页")));
         });
         list.add(new MenuItem(prevPage).setSlots(27).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
         ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_NEXT_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("下一页 →")));
         });
         list.add(new MenuItem(nextPage).setSlots(35).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
@@ -120,7 +120,7 @@ public class TiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Tier
         ).read(cfg);
 
         this.tierLore = ConfigValue.create("Tiers.Lore", Lists.newList(
-            LIGHT_YELLOW.enclose(GENERIC_AMOUNT) + " " + LIGHT_GRAY.enclose("pets.")
+            LIGHT_YELLOW.enclose(GENERIC_AMOUNT) + " " + LIGHT_GRAY.enclose("只宠物")
         )).read(cfg);
 
         this.tierSlots = ConfigValue.create("Tiers.Slots", new int[]{10, 12, 14, 16}).read(cfg);

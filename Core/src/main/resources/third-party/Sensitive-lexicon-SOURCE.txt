@@ -1,0 +1,17 @@
+Sensitive-lexicon
+
+Repository: https://github.com/konsheng/Sensitive-lexicon
+Commit: d967c30b053fa40b06c5a0dddf0be493f2dfae46
+License: MIT (see Sensitive-lexicon-LICENSE.txt)
+
+Bundled source files:
+- Vocabulary/暴恐词库.txt
+- Vocabulary/反动词库.txt
+- Vocabulary/色情词库.txt
+- Vocabulary/色情类型.txt
+- Vocabulary/涉枪涉爆.txt
+- Vocabulary/贪腐词库.txt
+- Vocabulary/补充词库.txt
+
+The selected word-list files are bundled unchanged. CombatPets normalizes
+entries in memory before matching pet names.

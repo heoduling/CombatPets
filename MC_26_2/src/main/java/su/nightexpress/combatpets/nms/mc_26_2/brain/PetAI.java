@@ -1,21 +1,26 @@
 package su.nightexpress.combatpets.nms.mc_26_2.brain;
 
-import com.google.common.collect.ImmutableList;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.TimeUtil;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
+import net.minecraft.world.entity.animal.camel.Camel;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.sensing.Sensor;
+import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.schedule.Activity;
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.combatpets.api.pet.ActivePet;
+import su.nightexpress.combatpets.api.pet.PetEntityBridge;
 import su.nightexpress.combatpets.api.pet.type.CombatMode;
 
 import java.util.Optional;
@@ -23,6 +28,7 @@ import java.util.Optional;
 public class PetAI {
 
     private static final int MAX_TICKS_TO_AUTO_ATTACK = 50;
+    public static final double OWNER_RECALL_DISTANCE = 31D;
     private static final UniformInt RETREAT_DURATION = TimeUtil.rangeOfSeconds(5, 20);
 
     public static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
@@ -35,9 +41,29 @@ public class PetAI {
         return entity.tickCount - entity.getLastHurtMobTimestamp() <= MAX_TICKS_TO_AUTO_ATTACK && entity.getLastHurtMob() != entity;
     }
 
+    public static boolean isOwnerRiding(@NotNull Mob pet) {
+        ActivePet holder = PetEntityBridge.getByMobId(pet.getUUID());
+        ServerPlayer owner = holder == null ? null : getLocalOwner(holder);
+        return owner != null && pet.hasPassenger(owner);
+    }
+
+    /** Returns the owner only when this pet's region thread owns the player too. */
+    @Nullable
+    public static ServerPlayer getLocalOwner(@NotNull ActivePet activePet) {
+        org.bukkit.entity.Player owner = activePet.getOwner();
+        if (!Bukkit.isOwnedByCurrentRegion(owner)) return null;
+        return ((CraftPlayer) owner).getHandle();
+    }
+
     @Nullable
     public static LivingEntity findTarget(@NotNull LivingEntity pet, @NotNull ActivePet activePet) {
-        Player owner = ((CraftPlayer) activePet.getOwner()).getHandle();
+        ServerPlayer owner = getLocalOwner(activePet);
+        if (owner == null) {
+            activePet.moveToOwner();
+            return null;
+        }
+        if (pet instanceof Mob mob && isOwnerTooFar(mob, owner)) return null;
+
         CombatMode combatMode = activePet.getCombatMode();
 
         LivingEntity angerTarget = null;
@@ -58,26 +84,83 @@ public class PetAI {
 
                 // Projectiles set lastHurtMob even if damage event was cancelled
                 // so need to double check if target was actually damaged.
-                if (angerTarget != null && angerTarget.getLastHurtByMob() != owner) {
-                    angerTarget = null;
+                if (angerTarget != null) {
+                    LivingEntity lastAttacker = angerTarget.getLastHurtByMob();
+                    boolean damagedByOwner = lastAttacker == owner;
+                    boolean continuedByPet = lastAttacker == pet && isAttackedSomeone(pet) && pet.getLastHurtMob() == angerTarget;
+                    if (!damagedByOwner && !continuedByPet) angerTarget = null;
                 }
+            }
+            else if (PetAI.isAttackedSomeone(pet)) {
+                LivingEntity petTarget = pet.getLastHurtMob();
+                if (petTarget != null && petTarget.getLastHurtByMob() == pet) angerTarget = petTarget;
             }
         }
 
-        return angerTarget;
+        // The owner is never a legal pet target. A teleport can leave vanilla
+        // last-hurt state pointing at the owner even after Bukkit damage was
+        // cancelled, so enforce this invariant at the shared target source.
+        return angerTarget == owner ? null : angerTarget;
     }
 
     public static <T extends LivingEntity> void updateActivity(@NotNull Mob entity, @NotNull Brain<T> brain) {
+        ActivePet holder = PetEntityBridge.getByMobId(entity.getUUID());
+        ServerPlayer owner = holder == null ? null : getLocalOwner(holder);
+        if (holder != null && owner == null) {
+            clearMovementAndCombat(entity, brain);
+            holder.moveToOwner();
+            brain.setActiveActivityIfPossible(Activity.IDLE);
+            entity.setAggressive(false);
+            return;
+        }
+        if (owner != null && isOwnerTooFar(entity, owner)) {
+            clearMovementAndCombat(entity, brain);
+        }
+
         if (PetAI.getAttackTarget(entity).isPresent()) {
             brain.setActiveActivityIfPossible(Activity.FIGHT);
-        }
-        else if (entity.isInWater()) {
-            brain.setActiveActivityToFirstValid(ImmutableList.of(Activity.SWIM));
         }
         else {
             brain.setActiveActivityIfPossible(Activity.IDLE);
         }
         entity.setAggressive(brain.hasMemoryValue(MemoryModuleType.ATTACK_TARGET));
+    }
+
+    private static <T extends LivingEntity> void clearMovementAndCombat(@NotNull Mob entity, @NotNull Brain<T> brain) {
+            brain.eraseMemory(MemoryModuleType.ANGRY_AT);
+            brain.eraseMemory(MemoryModuleType.UNIVERSAL_ANGER);
+            brain.eraseMemory(MemoryModuleType.ATTACK_TARGET);
+            brain.eraseMemory(MemoryModuleType.WALK_TARGET);
+            brain.eraseMemory(MemoryModuleType.PATH);
+            entity.getNavigation().stop();
+    }
+
+    public static boolean isOwnerTooFar(@NotNull Mob pet, @NotNull LivingEntity owner) {
+        return !pet.closerThan(owner, OWNER_RECALL_DISTANCE);
+    }
+
+    public static boolean shouldUseWaterNavigation(@NotNull Mob pet) {
+        if (!pet.isInWater()) return false;
+
+        Optional<LivingEntity> target = getAttackTarget(pet);
+        if (target.isPresent()) return target.get().isInWater();
+
+        ActivePet holder = PetEntityBridge.getByMobId(pet.getUUID());
+        if (holder == null) return true;
+
+        ServerPlayer owner = getLocalOwner(holder);
+        if (owner == null) {
+            holder.moveToOwner();
+            return true;
+        }
+        return owner.isInWater();
+    }
+
+    public static float getMovementSpeedModifier(@NotNull LivingEntity pet) {
+        if (pet instanceof Axolotl) return pet.isInWater() ? 0.6F : 0.15F;
+        if (pet instanceof Camel) return 2F;
+        if (pet instanceof Breeze) return 0.6F;
+        return 1F;
     }
 
     public static boolean setAngerTarget(@NotNull Mob pet, @NotNull LivingEntity target, boolean force) {

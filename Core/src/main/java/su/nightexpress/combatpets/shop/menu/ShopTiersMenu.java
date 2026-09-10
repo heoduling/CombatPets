@@ -19,6 +19,8 @@ import su.nightexpress.nightcore.menu.api.AutoFilled;
 import su.nightexpress.nightcore.menu.impl.ConfigMenu;
 import su.nightexpress.nightcore.menu.item.ItemHandler;
 import su.nightexpress.nightcore.menu.item.MenuItem;
+import su.nightexpress.nightcore.menu.link.Linked;
+import su.nightexpress.nightcore.menu.link.ViewLink;
 import su.nightexpress.nightcore.util.ItemReplacer;
 import su.nightexpress.nightcore.util.ItemUtil;
 import su.nightexpress.nightcore.util.Lists;
@@ -30,11 +32,12 @@ import java.util.List;
 import static su.nightexpress.combatpets.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Tier> {
+public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Tier>, Linked<Boolean> {
 
     private static final String FILE_NAME = "shop_pet_tiers.yml";
 
     private final ShopManager shopManager;
+    private final ViewLink<Boolean> link;
 
     private String       tierName;
     private List<String> tierLore;
@@ -43,8 +46,15 @@ public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<
     public ShopTiersMenu(@NotNull PetsPlugin plugin, @NotNull ShopManager shopManager) {
         super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
         this.shopManager = shopManager;
+        this.link = new ViewLink<>();
 
         this.load();
+    }
+
+    @NotNull
+    @Override
+    public ViewLink<Boolean> getLink() {
+        return this.link;
     }
 
     @Override
@@ -59,9 +69,11 @@ public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<
 
     @Override
     public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<Tier> autoFill) {
-        autoFill.setSlots(this.tierSlots);
+        boolean proShop = Boolean.TRUE.equals(this.getLink(viewer));
+        autoFill.setSlots(proShop ? this.tierSlots : new int[]{ShopManager.PLAYER_SHOP_TIER_SLOT});
         autoFill.setItems(this.plugin.getPetManager().getTiers().stream()
             .filter(this.shopManager::isEggBuyable)
+            .filter(tier -> proShop || this.shopManager.isPlayerShopTier(tier))
             .sorted(Comparator.comparingDouble(Tier::getWeight).reversed())
             .toList()
         );
@@ -75,14 +87,14 @@ public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<
             return item;
         });
         autoFill.setClickAction(tier -> (viewer1, event) -> {
-            this.runNextTick(() -> this.shopManager.openEggsMenu(viewer.getPlayer(), tier));
+            this.runNextTick(() -> this.shopManager.openEggsMenu(viewer1.getPlayer(), tier, proShop));
         });
     }
 
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Select a tier..."), MenuSize.CHEST_36);
+        return Config.createMenuOptions(BLACK.enclose("选择宠物品质"), MenuSize.CHEST_36);
     }
 
     @Override
@@ -92,19 +104,19 @@ public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<
 
         ItemStack backItem = ItemUtil.getSkinHead(SKIN_WRONG_MARK);
         ItemUtil.editMeta(backItem, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_EXIT.getName());
+            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("关闭")));
         });
         list.add(new MenuItem(backItem).setSlots(31).setPriority(10).setHandler(ItemHandler.forClose(this)));
 
         ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_PREVIOUS_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("← 上一页")));
         });
         list.add(new MenuItem(prevPage).setSlots(27).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
         ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_NEXT_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("下一页 →")));
         });
         list.add(new MenuItem(nextPage).setSlots(35).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
@@ -118,7 +130,7 @@ public class ShopTiersMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<
         ).read(cfg);
 
         this.tierLore = ConfigValue.create("Tiers.Lore", Lists.newList(
-            LIGHT_GRAY.enclose("Click to purchase " + LIGHT_YELLOW.enclose(TIER_NAME) + " pet eggs.")
+            LIGHT_GRAY.enclose("点击购买 " + LIGHT_YELLOW.enclose(TIER_NAME) + " 宠物蛋。")
         )).read(cfg);
 
         this.tierSlots = ConfigValue.create("Tiers.Slots", new int[]{10,12,14,16}).read(cfg);

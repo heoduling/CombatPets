@@ -1,7 +1,7 @@
 package su.nightexpress.combatpets.level.listener;
 
+import com.destroystokyo.paper.event.entity.EntityRemoveFromWorldEvent;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -11,37 +11,35 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.PetsPlugin;
 import su.nightexpress.combatpets.api.pet.ActivePet;
+import su.nightexpress.combatpets.api.pet.PetEntityBridge;
 import su.nightexpress.combatpets.level.LevelingConfig;
 import su.nightexpress.combatpets.level.LevelingManager;
 import su.nightexpress.nightcore.manager.AbstractListener;
 import su.nightexpress.nightcore.util.EntityUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class LevelingListener extends AbstractListener<PetsPlugin> {
 
     private final LevelingManager manager;
-    private final Map<UUID, Map<UUID, Double>> damageMap;
+    private final ConcurrentMap<UUID, ConcurrentMap<UUID, Double>> damageMap;
 
     public LevelingListener(@NotNull PetsPlugin plugin, @NotNull LevelingManager manager) {
         super(plugin);
         this.manager = manager;
-        this.damageMap = new HashMap<>();
+        this.damageMap = new ConcurrentHashMap<>();
     }
 
     @NotNull
-    private Map<UUID, Double> getDealtDamageMap(@NotNull LivingEntity victim) {
-        return this.damageMap.computeIfAbsent(victim.getUniqueId(), k -> new HashMap<>());
-    }
-
-    private double getDealtDamage(@NotNull LivingEntity victim, @NotNull LivingEntity damager) {
-        return this.getDealtDamageMap(victim).getOrDefault(damager.getUniqueId(), 0D);
+    private ConcurrentMap<UUID, Double> getDealtDamageMap(@NotNull LivingEntity victim) {
+        return this.damageMap.computeIfAbsent(victim.getUniqueId(), k -> new ConcurrentHashMap<>());
     }
 
     private void addDealtDamage(@NotNull LivingEntity victim, @NotNull LivingEntity damager, double damage) {
-        this.getDealtDamageMap(victim).put(damager.getUniqueId(), this.getDealtDamage(victim, damager) + damage);
+        this.getDealtDamageMap(victim).merge(damager.getUniqueId(), damage, Double::sum);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -61,7 +59,7 @@ public class LevelingListener extends AbstractListener<PetsPlugin> {
         double damage = event.getFinalDamage();
         if (damage <= 0D) return;
 
-        ActivePet activePet = this.plugin.getPetManager().getPetByMob(damager);
+        ActivePet activePet = PetEntityBridge.getByMobId(damager.getUniqueId());
         if (activePet == null) return;
 
         if (damage > victim.getHealth()) damage = victim.getHealth();
@@ -72,19 +70,17 @@ public class LevelingListener extends AbstractListener<PetsPlugin> {
     @EventHandler(priority = EventPriority.HIGH)
     public void onExpGainKill(EntityDeathEvent event) {
         LivingEntity victim = event.getEntity();
+        Map<UUID, Double> damagers = this.damageMap.remove(victim.getUniqueId());
         if (!this.manager.shouldDropXP(victim)) return;
         if (this.manager.isDisabledWorld(victim.getWorld())) return;
 
-        Map<UUID, Double> damagers = this.getDealtDamageMap(victim);
-        if (damagers.isEmpty()) return;
+        if (damagers == null || damagers.isEmpty()) return;
 
         double totalHealth = EntityUtil.getAttribute(victim, Attribute.MAX_HEALTH);
+        if (totalHealth <= 0D) return;
 
         damagers.forEach((damagerId, damageDealt) -> {
-            Entity entity = this.plugin.getServer().getEntity(damagerId);
-            if (!(entity instanceof LivingEntity damager)) return;
-
-            ActivePet pet = this.plugin.getPetManager().getPetByMob(damager);
+            ActivePet pet = PetEntityBridge.getByMobId(damagerId);
             if (pet == null) return;
 
             double damagePercent = Math.min(1D, damageDealt / totalHealth);
@@ -96,5 +92,10 @@ public class LevelingListener extends AbstractListener<PetsPlugin> {
                 event.setDroppedExp(Math.max(0, event.getDroppedExp() - xpReward));
             }
         });
+    }
+
+    @EventHandler
+    public void onEntityRemove(@NotNull EntityRemoveFromWorldEvent event) {
+        this.damageMap.remove(event.getEntity().getUniqueId());
     }
 }

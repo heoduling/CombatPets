@@ -4,36 +4,32 @@ import su.nightexpress.combatpets.nms.mc_26_2.EntityTypes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.phys.Vec3;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.api.pet.PetEntity;
 import su.nightexpress.combatpets.nms.mc_26_2.brain.PetAI;
 import su.nightexpress.combatpets.nms.mc_26_2.goals.combat.PetAutoTargetGoal;
 import su.nightexpress.nightcore.util.Reflex;
-import su.nightexpress.nightcore.util.random.Rnd;
 
 import java.lang.reflect.Constructor;
 import java.util.EnumSet;
 
 public class PhantomPet extends Phantom implements PetEntity {
 
-    private static final String MOVE_TARGET_POINT = "d";
-    private static final String ANCHOR_POINT = "e";
-    private static final String ATTACK_FASE = "f";
-
-    private LivingEntity lastTarget;
+    private static final String MOVE_TARGET_POINT = "moveTargetPoint";
+    private static final String ANCHOR_POINT = "anchorPoint";
+    private static final String ATTACK_PHASE = "attackPhase";
+    private static final int FOLLOW_UPDATE_INTERVAL_TICKS = 10;
+    private static final double COMBAT_FOLLOW_RANGE = 64D;
 
     private static final Constructor<?> CONSTR_I;
     private static final Constructor<?> CONSTR_C;
@@ -48,6 +44,7 @@ public class PhantomPet extends Phantom implements PetEntity {
 
     public PhantomPet(@NotNull ServerLevel world) {
         super(EntityTypes.get("phantom"), world);
+        this.getAttribute(Attributes.FOLLOW_RANGE).setBaseValue(COMBAT_FOLLOW_RANGE);
     }
 
     @Override
@@ -63,19 +60,8 @@ public class PhantomPet extends Phantom implements PetEntity {
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor accessor, DifficultyInstance difficulty, EntitySpawnReason reason, SpawnGroupData groupData) {
-        return groupData;
-    }
-
-    @Override
     protected void hurtArmor(DamageSource source, float amount) {
         this.doHurtEquipment(source, amount, PetAI.ARMOR_SLOTS);
-    }
-
-    @Override
-    public void setTarget(LivingEntity entityliving) {
-        super.setTarget(entityliving);
-        if (entityliving != null) this.lastTarget = entityliving;
     }
 
     abstract class PhantomMoveTargetGoal extends Goal {
@@ -87,6 +73,9 @@ public class PhantomPet extends Phantom implements PetEntity {
             this.setFlags(EnumSet.of(Flag.MOVE));
 
             Object phase = this.getAttackPhase();
+            if (phase == null) {
+                throw new IllegalStateException("Unable to access Phantom attack phase on Minecraft 26.2.");
+            }
 
             this.phaseClass = phase.getClass(); // Get private enum class
             this.phaseValues = phaseClass.getEnumConstants(); // Get enum values
@@ -100,13 +89,13 @@ public class PhantomPet extends Phantom implements PetEntity {
         }
 
         protected Object getAttackPhase() {
-            return Reflex.getFieldValue(PhantomPet.this, ATTACK_FASE);
+            return Reflex.getFieldValue(PhantomPet.this, ATTACK_PHASE);
             // 0 - CIRCLE
             // 1 - SWOOP
         }
 
 //        protected void setAttackPhase(int i) {
-//            Reflex.setFieldValue(PhantomPet.this, ATTACK_FASE, phaseValues[i]);
+//            Reflex.setFieldValue(PhantomPet.this, ATTACK_PHASE, phaseValues[i]);
 //        }
     }
 
@@ -122,28 +111,40 @@ public class PhantomPet extends Phantom implements PetEntity {
 
         @Override
         public boolean canUse() {
+            if (PetAI.getLocalOwner(PhantomPet.this.getHolder()) == null) {
+                PhantomPet.this.getHolder().moveToOwner();
+                return false;
+            }
             return PhantomPet.this.getTarget() == null || getAttackPhase() == phaseValues[0];
         }
 
         @Override
         public void start() {
-            this.distance = 5.0f + PhantomPet.this.random.nextFloat() * 10.0f;
-            this.height = -4.0f + PhantomPet.this.random.nextFloat() * 9.0f;
-            this.clockWise = (PhantomPet.this.random.nextBoolean() ? 1.0f : -1.0f);
+            this.distance = 5.0f + PhantomPet.this.getRandom().nextFloat() * 10.0f;
+            this.height = -4.0f + PhantomPet.this.getRandom().nextFloat() * 9.0f;
+            this.clockWise = (PhantomPet.this.getRandom().nextBoolean() ? 1.0f : -1.0f);
             this.selectNext();
         }
 
         @Override
         public void tick() {
-            if (lastTarget != null && lastTarget.isAlive()) {
-                setTarget(lastTarget);
+            ServerPlayer owner = PetAI.getLocalOwner(PhantomPet.this.getHolder());
+            if (owner == null) {
+                PhantomPet.this.setTarget(null);
+                PhantomPet.this.getHolder().moveToOwner();
+                return;
+            }
+            if (!PhantomPet.this.level().equals(owner.level()) || PetAI.isOwnerTooFar(PhantomPet.this, owner)) {
+                PhantomPet.this.setTarget(null);
+                PhantomPet.this.getHolder().moveToOwner();
+                return;
             }
 
-            if (PhantomPet.this.random.nextInt(350) == 0) {
-                this.height = -4.0f + PhantomPet.this.random.nextFloat() * 9.0f;
+            if (PhantomPet.this.getRandom().nextInt(350) == 0) {
+                this.height = -4.0f + PhantomPet.this.getRandom().nextFloat() * 9.0f;
             }
 
-            if (PhantomPet.this.random.nextInt(250) == 0) {
+            if (PhantomPet.this.getRandom().nextInt(250) == 0) {
                 ++this.distance;
                 if (this.distance > 15.0f) {
                     this.distance = 5.0f;
@@ -151,8 +152,8 @@ public class PhantomPet extends Phantom implements PetEntity {
                 }
             }
 
-            if (PhantomPet.this.random.nextInt(450) == 0) {
-                this.angle = PhantomPet.this.random.nextFloat() * 2.0f * 3.1415927f;
+            if (PhantomPet.this.getTarget() == null && PhantomPet.this.tickCount % FOLLOW_UPDATE_INTERVAL_TICKS == 0) {
+                this.angle = PhantomPet.this.getRandom().nextFloat() * 2.0f * 3.1415927f;
                 this.selectNext();
             }
 
@@ -177,16 +178,19 @@ public class PhantomPet extends Phantom implements PetEntity {
             LivingEntity follow = getTarget();
 
             BlockPos anchor = (BlockPos) Reflex.getFieldValue(PhantomPet.this, ANCHOR_POINT);
-            if (anchor == null) return;
-
-            if (BlockPos.ZERO.equals(anchor)) {
-                Reflex.setFieldValue(PhantomPet.this, ANCHOR_POINT, new BlockPos(anchor = PhantomPet.this.blockPosition()));
+            if (anchor == null || BlockPos.ZERO.equals(anchor)) {
+                anchor = PhantomPet.this.blockPosition().above(5);
+                Reflex.setFieldValue(PhantomPet.this, ANCHOR_POINT, anchor);
             }
 
             Vec3 point;
-            if (follow == null || !follow.isAlive()) {
-                follow = ((CraftPlayer) PhantomPet.this.getHolder().getOwner()).getHandle();
-                point = new Vec3(follow.getX() + Rnd.getDouble(-2, 2), follow.getY() + 2.5, follow.getZ() + Rnd.getDouble(-2, 2));
+            if (follow == null || !follow.isAlive() || getAttackPhase() == phaseValues[0]) {
+                follow = PetAI.getLocalOwner(PhantomPet.this.getHolder());
+                if (follow == null) {
+                    PhantomPet.this.getHolder().moveToOwner();
+                    return;
+                }
+                point = new Vec3(follow.getX(), follow.getY() + 2.5, follow.getZ());
             }
             else {
                 this.angle += this.clockWise * 15.0F * 0.017453292F;

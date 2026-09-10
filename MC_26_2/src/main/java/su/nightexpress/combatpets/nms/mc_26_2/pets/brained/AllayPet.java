@@ -11,5 +11,6 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class AllayPet extends Allay implements PetEntity {
     public AllayPet(@NotNull ServerLevel level) { super(EntityTypes.get("allay"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Allay> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Allay> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
 }

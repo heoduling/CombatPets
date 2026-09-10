@@ -86,12 +86,14 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
     @NotNull
     public static PlaceholderMap forData(@NotNull PetData data) {
         PlaceholderMap placeholderMap = new PlaceholderMap()
+            .add(data.getTemplate().getPlaceholders())
+            .add(data.getTier().getPlaceholders())
             .add(PET_NAME, data::getName)
-            .add(PET_SILENT, () -> CoreLang.STATE_ENABLED_DISALBED.get(data.isSilent()))
+            .add(PET_SILENT, () -> (data.isSilent() ? Lang.STATE_ENABLED : Lang.STATE_DISABLED).text())
             .add(PET_HEALTH, () -> NumberUtil.format(data.getHealth()))
-            .add(PET_IS_DEAD, () -> CoreLang.STATE_YES_NO.get(data.isDead()))
+            .add(PET_IS_DEAD, () -> (data.isDead() ? Lang.STATE_YES : Lang.STATE_NO).text())
             .add(PET_FOOD, () -> {
-                if (data.getConfig().getFoodCategories().isEmpty()) return CoreLang.OTHER_NONE.text();
+                if (data.getConfig().getFoodCategories().isEmpty()) return Lang.OTHER_NONE.text();
 
                 return data.getConfig().getFoodCategories().stream()
                         .map(name -> PetAPI.getPetManager().getFoodCategory(name))
@@ -103,7 +105,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
             .add(PET_SATURATION, () -> NumberUtil.format(data.getFoodLevel()))
             .add(PET_MAX_SATURATION, () -> {
                 double maxSaturation = data.getAttributeValue(AttributeRegistry.MAX_SATURATION);
-                return maxSaturation <= 0D ? CoreLang.OTHER_INFINITY.text() : NumberUtil.format(maxSaturation);
+                return maxSaturation <= 0D ? Lang.OTHER_INFINITY.text() : NumberUtil.format(maxSaturation);
             })
             .add(PET_LEVEL, () -> String.valueOf(data.getLevel()))
             .add(PET_XP, () -> NumberUtil.format(data.getXP()))
@@ -133,7 +135,7 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
             .add(PET_HEALTH, () -> NumberUtil.format(instance.getEntity().getHealth()))
             .add(PET_MAX_HEALTH, () -> NumberUtil.format(instance.getMaxHealth()))
             .add(PET_OWNER_NAME, () -> instance.getOwner().getName())
-            .add(PET_EQUIPMENT_UNLOCKED, () -> CoreLang.STATE_YES_NO.get(instance.isEquipmentUnlocked()))
+            .add(PET_EQUIPMENT_UNLOCKED, () -> (instance.isEquipmentUnlocked() ? Lang.STATE_YES : Lang.STATE_NO).text())
             .add(PET_INVENTORY_FILLED, () -> String.valueOf(Stream.of(instance.getInventory().getContents()).filter(i -> i != null && !i.getType().isAir()).count()))
             .add(instance.getData().getPlaceholders());
     }
@@ -143,9 +145,9 @@ public class Placeholders extends su.nightexpress.nightcore.util.Placeholders {
         return new PlaceholderMap()
             .add(TIER_ID, tier::getId)
             .add(TIER_NAME, tier::getName)
-            .add(TIER_INVENTORY_HAS, () -> CoreLang.STATE_YES_NO.get(tier.hasInventory()))
+            .add(TIER_INVENTORY_HAS, () -> (tier.hasInventory() ? Lang.STATE_YES : Lang.STATE_NO).text())
             .add(TIER_INVENTORY_SIZE, () -> String.valueOf(tier.getInventorySize()))
-            .add(TIER_EQUIPMENT_HAS, () -> CoreLang.STATE_YES_NO.get(tier.hasEquipment()))
+            .add(TIER_EQUIPMENT_HAS, () -> (tier.hasEquipment() ? Lang.STATE_YES : Lang.STATE_NO).text())
             .add(TIER_DEATH_REVIVE_COOLDOWN, () -> TimeUtil.formatTime(tier.getAutoRespawnTime()))
             .add(TIER_DEATH_REVIVE_COST, () -> {
                 Currency currency = EconomyBridge.getCurrency(tier.getReviveCurrency());

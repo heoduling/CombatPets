@@ -2,13 +2,13 @@ package su.nightexpress.combatpets.config;
 
 import org.bukkit.DyeColor;
 import org.bukkit.Sound;
+import org.bukkit.entity.Axolotl;
 import org.bukkit.entity.Fox;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Llama;
 import org.bukkit.entity.Rabbit;
 import su.nightexpress.combatpets.api.pet.type.CombatMode;
 import su.nightexpress.combatpets.wardrobe.handler.AgeVariantHandler;
-import su.nightexpress.combatpets.wardrobe.handler.CreeperPowerVariantHandler;
 import su.nightexpress.combatpets.wardrobe.handler.SheepShearVariantHandler;
 import su.nightexpress.nightcore.locale.LangContainer;
 import su.nightexpress.nightcore.locale.LangEntry;
@@ -22,7 +22,6 @@ import static su.nightexpress.combatpets.Placeholders.*;
 public class Lang implements LangContainer {
 
     public static final EnumLocale<AgeVariantHandler.Type>          AGE_TYPE   = LangEntry.builder("PetVariant.AgeType").enumeration(AgeVariantHandler.Type.class);
-    public static final EnumLocale<CreeperPowerVariantHandler.Type> POWER_TYPE = LangEntry.builder("PetVariant.CreeperPower").enumeration(CreeperPowerVariantHandler.Type.class);
     public static final EnumLocale<DyeColor>                        DYE_COLOR   = LangEntry.builder("PetVariant.DyeColor").enumeration(DyeColor.class);
     public static final EnumLocale<Fox.Type>                        FOX_TYPE    = LangEntry.builder("PetVariant.FoxType").enumeration(Fox.Type.class);
     public static final EnumLocale<Horse.Color>                     HORSE_COLOR = LangEntry.builder("PetVariant.HorseColor").enumeration(Horse.Color.class);
@@ -30,12 +29,32 @@ public class Lang implements LangContainer {
     public static final EnumLocale<Llama.Color>                     LLAMA_COLOR = LangEntry.builder("PetVariant.LlamaColor").enumeration(Llama.Color.class);
     public static final EnumLocale<SheepShearVariantHandler.Type>   SHEEP_SHEAR = LangEntry.builder("PetVariant.SheepShear").enumeration(SheepShearVariantHandler.Type.class);
     public static final EnumLocale<Rabbit.Type> RABBIT_TYPE = LangEntry.builder("PetVariant.RabbitType").enumeration(Rabbit.Type.class);
+    public static final EnumLocale<Axolotl.Variant> AXOLOTL_VARIANT = LangEntry.builder("PetVariant.AxolotlVariant").enumeration(Axolotl.Variant.class);
 
     public static final EnumLocale<CombatMode> COMBAT_MODE = LangEntry.builder("CombatMode").enumeration(CombatMode.class);
 
     public static final TextLocale COMMAND_ARGUMENT_NAME_TIER = LangEntry.builder("Command.Argument.Name.Tier").text("tier");
     public static final TextLocale COMMAND_ARGUMENT_NAME_PET  = LangEntry.builder("Command.Argument.Name.Pet").text("pet");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_PLAYER = LangEntry.builder("Command.Argument.Name.Player").text("player");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_AMOUNT = LangEntry.builder("Command.Argument.Name.Amount").text("amount");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_NAME   = LangEntry.builder("Command.Argument.Name.Name").text("name");
+    public static final TextLocale COMMAND_ARGUMENT_NAME_TYPE   = LangEntry.builder("Command.Argument.Name.Type").text("type");
 
+    public static final TextLocale STATE_ENABLED  = LangEntry.builder("State.Enabled").text("Enabled");
+    public static final TextLocale STATE_DISABLED = LangEntry.builder("State.Disabled").text("Disabled");
+    public static final TextLocale STATE_YES      = LangEntry.builder("State.Yes").text("Yes");
+    public static final TextLocale STATE_NO       = LangEntry.builder("State.No").text("No");
+    public static final TextLocale OTHER_NONE     = LangEntry.builder("Other.None").text("None");
+    public static final TextLocale OTHER_INFINITY = LangEntry.builder("Other.Infinity").text("Infinity");
+
+    public static final TextLocale COMMAND_PLAYER_HELP_TITLE = LangEntry.builder("Command.PlayerHelp.Title").text("Pets Player");
+    public static final TextLocale COMMAND_PLAYER_HELP_DESC  = LangEntry.builder("Command.PlayerHelp.Desc").text("Show player commands.");
+    public static final TextLocale COMMAND_ADMIN_HELP_TITLE  = LangEntry.builder("Command.AdminHelp.Title").text("Pets Admin");
+    public static final TextLocale COMMAND_ADMIN_HELP_DESC   = LangEntry.builder("Command.AdminHelp.Desc").text("Show administrator commands.");
+    public static final TextLocale COMMAND_RELOAD_DESC                = LangEntry.builder("Command.Reload.Desc").text("Reload the plugin.");
+    public static final MessageLocale COMMAND_RELOAD_DONE = LangEntry.builder("Command.Reload.Done").chatMessage(
+        GRAY.wrap("Plugin reloaded.")
+    );
     public static final TextLocale COMMAND_COLLECTION_DESC            = LangEntry.builder("Command.Collection.Desc").text("List of pets you have claimed.");
     public static final TextLocale COMMAND_ADD_ALL_DESC               = LangEntry.builder("Command.AddAll.Desc").text("Add all pets to collection.");
     public static final TextLocale COMMAND_ADD_DESC                   = LangEntry.builder("Command.Add.Desc").text("Add pet to collection.");
@@ -45,11 +64,16 @@ public class Lang implements LangContainer {
     public static final TextLocale COMMAND_FOOD_DESC        = LangEntry.builder("Command.Food.Desc").text("Give food item.");
     public static final TextLocale COMMAND_EGG_DESC         = LangEntry.builder("Command.Egg.Desc").text("Give pet egg.");
     public static final TextLocale COMMAND_MYSTERY_EGG_DESC = LangEntry.builder("Command.MysteryEgg.Desc").text("Give mystery egg.");
+    public static final TextLocale COMMAND_RANDOM_MYSTERY_EGG_DESC = LangEntry.builder("Command.RandomMysteryEgg.Desc").text("给予随机宠物、随机品质的神秘宠物蛋。");
     public static final TextLocale COMMAND_RENAME_DESC                = LangEntry.builder("Command.Rename.Desc").text("Rename player's pet.");
     public static final TextLocale COMMAND_REVIVE_DESC                = LangEntry.builder("Command.Revive.Desc").text("Revive player's pet.");
     public static final TextLocale COMMAND_CLEAR_INVENTORY_DESC       = LangEntry.builder("Command.ClearInventory.Desc").text("Clear player's pet inventory.");
     public static final TextLocale COMMAND_MENU_DESC                  = LangEntry.builder("Command.Menu.Desc").text("Open pet menu.");
     public static final TextLocale COMMAND_SHOP_DESC                  = LangEntry.builder("Command.Shop.Desc").text("Open shop.");
+    public static final TextLocale COMMAND_ADMIN_SHOP_DESC            = LangEntry.builder("Command.AdminShop.Desc").text("Manage pet shop prices.");
+    public static final TextLocale COMMAND_ADMIN_PRO_SHOP_DESC        = LangEntry.builder("Command.AdminProShop.Desc").text("Open the full pet egg shop.");
+    public static final TextLocale COMMAND_ADMIN_ATTRIBUTES_DESC      = LangEntry.builder("Command.AdminAttributes.Desc").text("Manage pet attribute target values.");
+    public static final TextLocale COMMAND_ADMIN_MENU_DESC            = LangEntry.builder("Command.AdminMenu.Desc").text("Open the administrator pet test menu.");
     public static final TextLocale COMMAND_ACCESSORY_DESC             = LangEntry.builder("Command.Accessory.Desc").text("Give accessory item.");
     public static final TextLocale COMMAND_RESET_PROGRESS_DESC        = LangEntry.builder("Command.ResetProgress.Desc").text("Reset leveling for player's pet.");
     public static final TextLocale COMMAND_XP_DESC                    = LangEntry.builder("Command.XP.Desc").text("XP commands.");
@@ -143,6 +167,10 @@ public class Lang implements LangContainer {
         GRAY.wrap("Given " + SOFT_YELLOW.wrap(TEMPLATE_NAME) + " mystery egg to " + SOFT_YELLOW.wrap(PLAYER_NAME) + ".")
     );
 
+    public static final MessageLocale COMMAND_RANDOM_MYSTERY_EGG_DONE = LangEntry.builder("Command.RandomMysteryEgg.Done").chatMessage(
+        GRAY.wrap("已给予 " + SOFT_YELLOW.wrap(PLAYER_NAME) + " 一个随机宠物、随机品质的神秘宠物蛋。")
+    );
+
 
     public static final MessageLocale COMMAND_RENAME_DONE = LangEntry.builder("Command.Rename.Done").chatMessage(
         GRAY.wrap("Renamed " + SOFT_YELLOW.wrap(PLAYER_NAME) + "'s pet to " + SOFT_YELLOW.wrap(PET_NAME) + ".")
@@ -174,6 +202,46 @@ public class Lang implements LangContainer {
         GRAY.wrap("Given " + SOFT_YELLOW.wrap(GENERIC_AMOUNT + " x " + GENERIC_NAME) + " to " + SOFT_YELLOW.wrap(PLAYER_DISPLAY_NAME) + ".")
     );
 
+    public static final MessageLocale SHOP_ADMIN_PRICE_PROMPT = LangEntry.builder("Shop.Admin.Price.Prompt").titleMessage(
+        SOFT_YELLOW.wrap(BOLD.wrap("Editing Shop Price")),
+        GRAY.wrap("Enter a price for " + SOFT_YELLOW.wrap(TIER_NAME + " " + TEMPLATE_DEFAULT_NAME) + ". Enter 0 to restore the tier default."),
+        Sound.BLOCK_LAVA_POP
+    );
+
+    public static final MessageLocale SHOP_ADMIN_PRICE_UPDATED = LangEntry.builder("Shop.Admin.Price.Updated").chatMessage(
+        GRAY.wrap("Updated " + SOFT_YELLOW.wrap(TIER_NAME + " " + TEMPLATE_DEFAULT_NAME) + " price to " + SOFT_GREEN.wrap(GENERIC_PRICE) + ".")
+    );
+
+    public static final MessageLocale SHOP_ADMIN_PRICE_ERROR = LangEntry.builder("Shop.Admin.Price.Error.Currency").chatMessage(
+        SOFT_RED.wrap("The configured currency for this price is unavailable; the price was not changed.")
+    );
+
+    public static final MessageLocale SHOP_ADMIN_PRICE_ERROR_INVALID = LangEntry.builder("Shop.Admin.Price.Error.Invalid").chatMessage(
+        SOFT_RED.wrap("Please enter a non-negative finite number. Enter 0 to restore the tier default.")
+    );
+
+    public static final MessageLocale PET_ATTRIBUTE_ADMIN_TARGET_PROMPT = LangEntry.builder("Pet.Admin.Attribute.Target.Prompt").titleMessage(
+        SOFT_YELLOW.wrap(BOLD.wrap("Editing Pet Attribute")),
+        GRAY.wrap("Enter the final value for " + SOFT_YELLOW.wrap(GENERIC_NAME) + "; type " + SOFT_YELLOW.wrap("reset") + " to use legacy Per_Aspect."),
+        Sound.BLOCK_LAVA_POP
+    );
+
+    public static final MessageLocale PET_ATTRIBUTE_ADMIN_TARGET_UPDATED = LangEntry.builder("Pet.Admin.Attribute.Target.Updated").chatMessage(
+        GRAY.wrap("Attribute target updated to " + SOFT_GREEN.wrap(GENERIC_VALUE) + ".")
+    );
+
+    public static final MessageLocale PET_ATTRIBUTE_ADMIN_TARGET_RESET = LangEntry.builder("Pet.Admin.Attribute.Target.Reset").chatMessage(
+        GRAY.wrap("Attribute target reset; the pet's legacy Per_Aspect value is active.")
+    );
+
+    public static final MessageLocale PET_ATTRIBUTE_ADMIN_TARGET_INVALID = LangEntry.builder("Pet.Admin.Attribute.Target.Invalid").chatMessage(
+        SOFT_RED.wrap("Please enter a finite non-negative number, or reset.")
+    );
+
+    public static final MessageLocale PET_ATTRIBUTE_ADMIN_TARGET_ERROR = LangEntry.builder("Pet.Admin.Attribute.Target.Error").chatMessage(
+        SOFT_RED.wrap("This attribute is not linked to any available aspect points for this tier.")
+    );
+
 
 
     public static final MessageLocale PET_DESPAWN_DEATH = LangEntry.builder("Pet.Despawn.Death").titleMessage(
@@ -192,6 +260,9 @@ public class Lang implements LangContainer {
 
     public static final MessageLocale PET_CLAIM_ERROR_REACHED_LIMIT = LangEntry.builder("Pet.Claim.Error.ReachedLimit").chatMessage(
         SOFT_RED.wrap("You can not claim more than " + ORANGE.wrap(GENERIC_AMOUNT) + " " + TIER_NAME + " pets!"));
+
+    public static final MessageLocale PET_ERROR_DATA_LOADING = LangEntry.builder("Pet.Error.DataLoading").chatMessage(
+        SOFT_YELLOW.wrap("Your pet data is still loading. Please try again in a moment."));
 
     public static final MessageLocale PET_CLAIM_SUCCESS = LangEntry.builder("Pet.Claim.Success").titleMessage(
         SOFT_GREEN.wrap(BOLD.wrap("Pet Claimed!")),
@@ -219,8 +290,16 @@ public class Lang implements LangContainer {
 
     public static final MessageLocale CAPTURE_FAIL_ESCAPED = LangEntry.builder("Pet.Catch.Process.Escaped").titleMessage(
         ORANGE.wrap(BOLD.wrap("Mob Escaped!")),
-        GRAY.wrap("You have to look for another one..."),
+        GRAY.wrap("The capture attempt ended. You can try capturing it again."),
         0, 50, Sound.ENTITY_VILLAGER_NO
+    );
+
+    public static final MessageLocale PET_DESPAWN_NO_WATER = LangEntry.builder("Pet.Despawn.NoWater").chatMessage(
+        GRAY.wrap("No suitable water was found nearby. " + SOFT_YELLOW.wrap(TEMPLATE_DEFAULT_NAME) + " was returned to your collection.")
+    );
+
+    public static final MessageLocale PET_DESPAWN_TELEPORT_FAILED = LangEntry.builder("Pet.Despawn.TeleportFailed").chatMessage(
+        GRAY.wrap("Your pet could not teleport to you and was returned to your collection.")
     );
 
     public static final MessageLocale CAPTURE_FAIL_UNLUCK = LangEntry.builder("Pet.Catch.Process.Failure").titleMessage(
@@ -244,7 +323,19 @@ public class Lang implements LangContainer {
     );
 
     public static final MessageLocale CAPTURE_ERROR_NOT_READY = LangEntry.builder("Pet.Catch.Error.Conditions").chatMessage(
-        GRAY.wrap(SOFT_RED.wrap(GENERIC_NAME) + " is not ready for capture.")
+        GRAY.wrap(SOFT_RED.wrap(GENERIC_NAME) + "'s health must be at or below " + SOFT_RED.wrap(GENERIC_AMOUNT + "%") + ".")
+    );
+
+    public static final MessageLocale CAPTURE_ERROR_ALREADY = LangEntry.builder("Pet.Catch.Error.AlreadyCapturing").chatMessage(
+        SOFT_RED.wrap("You are already capturing a mob.")
+    );
+
+    public static final MessageLocale CAPTURE_ERROR_NO_TIER = LangEntry.builder("Pet.Catch.Error.NoTier").chatMessage(
+        SOFT_RED.wrap("No capturable pet tier is enabled.")
+    );
+
+    public static final MessageLocale CAPTURE_ERROR_START = LangEntry.builder("Pet.Catch.Error.StartFailed").chatMessage(
+        SOFT_RED.wrap("The capture could not be started. Try again.")
     );
 
 
@@ -348,6 +439,20 @@ public class Lang implements LangContainer {
         Sound.ENTITY_VILLAGER_NO
     );
 
+    public static final MessageLocale PET_SPAWN_ERROR_PROTECTED_AREA = LangEntry.builder("Pet.Spawn.Error.ProtectedArea").chatMessage(
+        SOFT_RED.wrap("You can not summon a pet in this protected area.")
+    );
+
+    public static final MessageLocale PET_SPAWN_ERROR_PEACEFUL = LangEntry.builder("Pet.Spawn.Error.Peaceful").titleMessage(
+        SOFT_RED.wrap(BOLD.wrap("Peaceful Difficulty!")),
+        GRAY.wrap("Hostile pets can not be summoned in Peaceful difficulty."),
+        Sound.ENTITY_VILLAGER_NO
+    );
+
+    public static final MessageLocale PET_SPAWN_WARNING_WATER_RESTRICTED = LangEntry.builder("Pet.Spawn.Warning.WaterRestricted").chatMessage(
+        SOFT_YELLOW.wrap(TEMPLATE_DEFAULT_NAME + " is a water-only pet. It cannot attack on land and will return to the collection if no water is nearby.")
+    );
+
     public static final MessageLocale PET_ERROR_BAD_WORLD = LangEntry.builder("Pet.Error.BadWorld").chatMessage(
         SOFT_RED.wrap("Pets are disabled in this world.")
     );
@@ -420,5 +525,9 @@ public class Lang implements LangContainer {
 
     public static final MessageLocale ERROR_COMMAND_INVALID_VARIANT_ARGUMENT = LangEntry.builder("Command.Syntax.InvalidCustomization").chatMessage(
         GRAY.wrap(SOFT_RED.wrap(GENERIC_INPUT) + " is not a valid customization type!")
+    );
+
+    public static final MessageLocale ERROR_NO_PERMISSION = LangEntry.builder("Error.NoPermission").chatMessage(
+        SOFT_RED.wrap("You don't have permission to do this!")
     );
 }

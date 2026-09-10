@@ -9,7 +9,15 @@ import su.nightexpress.combatpets.nms.mc_26_2.EntityTypes;
 import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 
 public class PiglinPet extends Piglin implements PetEntity {
-    public PiglinPet(@NotNull ServerLevel level) { super(EntityTypes.get("piglin"), level); }
+    public PiglinPet(@NotNull ServerLevel level) {
+        super(EntityTypes.get("piglin"), level);
+        // Keep a summoned pet from being replaced by a vanilla Zombified Piglin.
+        this.setImmuneToZombification(true);
+    }
     @Override public void setGoals() { }
-    @Override protected Brain<Piglin> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Piglin> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
+    @Override protected boolean canHunt() { return false; }
+    @Override public boolean isImmuneToZombification() { return true; }
+    @Override public boolean isConverting() { return false; }
 }

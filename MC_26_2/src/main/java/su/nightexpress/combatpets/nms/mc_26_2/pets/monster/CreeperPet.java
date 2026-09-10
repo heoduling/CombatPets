@@ -3,7 +3,6 @@ package su.nightexpress.combatpets.nms.mc_26_2.pets.monster;
 import su.nightexpress.combatpets.nms.mc_26_2.EntityTypes;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -12,13 +11,20 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.SwellGoal;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.ProjectileWeaponItem;
+import net.minecraft.world.item.TridentItem;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.gameevent.GameEvent;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +46,6 @@ public class CreeperPet extends Creeper implements PetEntity {
 
     public CreeperPet(@NotNull ServerLevel world) {
         super(EntityTypes.get("creeper"), world);
-        this.maxSwell = 60;
     }
 
     @Override
@@ -48,8 +53,50 @@ public class CreeperPet extends Creeper implements PetEntity {
         this.targetSelector.addGoal(1, new PetAutoTargetGoal(this));
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new PetFollowOwnerGoal(this));
-        this.goalSelector.addGoal(2, new SwellGoal(this));
+        // A vanilla SwellGoal has higher priority than PetMeleeAttackGoal, so
+        // an armed creeper would never perform its configured melee attack.
+        this.goalSelector.addGoal(2, new PetSwellGoal(this));
         this.goalSelector.addGoal(4, new PetMeleeAttackGoal(this));
+    }
+
+    private boolean isArmed() {
+        ItemStack stack = this.getMainHandItem();
+        Item item = stack.getItem();
+        return stack.is(ItemTags.SWORDS)
+            || stack.is(ItemTags.AXES)
+            || item instanceof ProjectileWeaponItem
+            || item instanceof MaceItem
+            || item instanceof TridentItem;
+    }
+
+    /**
+     * Vanilla Creeper.doHurtTarget intentionally does not deal melee damage
+     * (it only returns true).  Armed pets still use the shared melee goal, so
+     * provide the normal weapon damage path when a player equips this pet.
+     */
+    @Override
+    public boolean doHurtTarget(@NotNull ServerLevel level, @NotNull net.minecraft.world.entity.Entity target) {
+        if (!this.isArmed()) {
+            return super.doHurtTarget(level, target);
+        }
+
+        ItemStack weapon = this.getWeaponItem();
+        DamageSource source = weapon.getDamageSource(this);
+        float damage = (float) this.getAttributeValue(Attributes.ATTACK_DAMAGE);
+        damage = EnchantmentHelper.modifyDamage(level, weapon, target, source, damage);
+        damage += weapon.getItem().getAttackDamageBonus(target, damage, source);
+
+        if (!target.hurtServer(level, source, damage)) {
+            return false;
+        }
+
+        if (target instanceof net.minecraft.world.entity.LivingEntity living) {
+            weapon.hurtEnemy(living, this);
+        }
+        EnchantmentHelper.doPostAttackEffects(level, target, source);
+        this.setLastHurtMob(target);
+        this.playAttackSound();
+        return true;
     }
 
     @Override
@@ -72,31 +119,12 @@ public class CreeperPet extends Creeper implements PetEntity {
                 this.setTarget(null);
             }
 
-            if (this.explodeCooldown-- <= 0) {
-                Reflex.setFieldValue(this, "cu", this.swell); // oldSwell field
-
-                if (this.isIgnited()) {
-                    this.setSwellDir(1);
-                }
-
-                int count = this.getSwellDir();
-                if (count > 0 && this.swell == 0) {
-                    this.playSound(SoundEvents.CREEPER_PRIMED, 1.0f, 0.5f);
-                    this.gameEvent(GameEvent.PRIME_FUSE);
-                }
-                this.swell += count;
-                if (this.swell < 0) {
-                    this.swell = 0;
-                }
-                if (this.swell >= this.maxSwell) {
-                    //if (this.explodeCooldown <= 0) {
-                    this.explodeCreeper();
-                    this.setSwellDir(-1);
-                    this.explodeCooldown = 60;
-                    //}
-                    this.swell = 0;
-                }
+            if (this.isArmed() || this.explodeCooldown > 0) {
+                this.setSwellDir(-1);
+                this.swell = 0;
             }
+
+            if (this.explodeCooldown > 0) this.explodeCooldown--;
         }
         super.tick();
     }
@@ -109,18 +137,35 @@ public class CreeperPet extends Creeper implements PetEntity {
 
         float f = this.isPowered() ? 2.0f : 1.0f;
 
-        ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), (float) this.explosionRadius * f, false);
-        this.level().getCraftServer().getPluginManager().callEvent(event);
-        if (!event.isCancelled()) {
-            //this.aX = true; // Makes mob 'invulnerable', stop fires damage events
-            this.dead = true;
-            this.level().explode(this, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), interaction);
-            this.dead = false;
-            //this.die();
-            Reflex.invokeMethod(SPAWN_LINGERING_CLOUD, this);
+        try {
+            ExplosionPrimeEvent event = new ExplosionPrimeEvent(this.getBukkitEntity(), (float) this.explosionRadius * f, false);
+            this.level().getCraftServer().getPluginManager().callEvent(event);
+            if (!event.isCancelled()) {
+                // Keep the reusable pet entity alive while creating the explosion.
+                boolean wasInvulnerable = this.isInvulnerable();
+                this.dead = true;
+                this.setInvulnerable(true);
+                try {
+                    this.level().explode(this, this.getX(), this.getY(), this.getZ(), event.getRadius(), event.getFire(), interaction);
+                }
+                finally {
+                    this.setInvulnerable(wasInvulnerable);
+                    this.dead = false;
+                }
+                Reflex.invokeMethod(SPAWN_LINGERING_CLOUD, this);
 
-            LivingEntity li = (LivingEntity) this.getBukkitEntity();
-            li.setVelocity(li.getEyeLocation().add(1, 1, 1).getDirection().multiply(-1.5));
+                LivingEntity li = (LivingEntity) this.getBukkitEntity();
+                li.setVelocity(li.getEyeLocation().add(1, 1, 1).getDirection().multiply(-1.5));
+            }
+        }
+        finally {
+            // Creeper.tick() owns fuse progression. Always reset here so a
+            // cancelled or failed explosion cannot retrigger on the next tick.
+            // The client does not receive the server-side swell value, only
+            // this direction. One full negative step clears its local visual.
+            this.setSwellDir(-this.maxSwell);
+            this.swell = 0;
+            this.explodeCooldown = 60;
         }
     }
 
@@ -137,5 +182,25 @@ public class CreeperPet extends Creeper implements PetEntity {
     @Override
     protected boolean shouldDropLoot(ServerLevel var0) {
         return false;
+    }
+
+    private static final class PetSwellGoal extends SwellGoal {
+
+        private final CreeperPet creeper;
+
+        private PetSwellGoal(@NotNull CreeperPet creeper) {
+            super(creeper);
+            this.creeper = creeper;
+        }
+
+        @Override
+        public boolean canUse() {
+            return !this.creeper.isArmed() && this.creeper.explodeCooldown <= 0 && super.canUse();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return !this.creeper.isArmed() && this.creeper.explodeCooldown <= 0 && super.canContinueToUse();
+        }
     }
 }

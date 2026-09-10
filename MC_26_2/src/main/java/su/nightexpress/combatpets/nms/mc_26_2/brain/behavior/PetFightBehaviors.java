@@ -8,7 +8,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.*;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.ai.memory.WalkTarget;
 import net.minecraft.world.entity.ai.sensing.Sensor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ProjectileWeaponItem;
@@ -22,7 +21,6 @@ import su.nightexpress.combatpets.api.pet.PetEntity;
 import su.nightexpress.combatpets.nms.mc_26_2.brain.PetAI;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 public class PetFightBehaviors {
 
@@ -38,7 +36,12 @@ public class PetFightBehaviors {
                     if (currentTarget.isPresent()) return false;
                     if (!(mob instanceof PetEntity petEntity)) return false;
 
-                    ActivePet activePet = petEntity.getHolder();
+                    ActivePet activePet = petEntity.holder().orElse(null);
+                    // A retired entity can survive a PlugManX transition for
+                    // one tick while the old bridge is being cleared.  It is
+                    // no longer a controllable pet in that state, so do not
+                    // dereference a missing holder or run combat logic.
+                    if (activePet == null) return false;
 
                     LivingEntity target = PetAI.findTarget(mob, activePet);
                     if (target == null || !mob.canAttack(target)) return false;
@@ -89,6 +92,13 @@ public class PetFightBehaviors {
         });
     }
 
+    @NotNull
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static BehaviorControl<Mob> crossbowAttack() {
+        // Use the vanilla behavior so charging, cooldown and projectile state stay correct.
+        return (BehaviorControl) new CrossbowAttack();
+    }
+
     private static boolean isHoldingUsableProjectileWeapon(Mob pet) {
         return pet.isHolding((itemStack) -> {
             Item item = itemStack.getItem();
@@ -113,24 +123,6 @@ public class PetFightBehaviors {
 
     @NotNull
     public static BehaviorControl<Mob> reachTargetWhenOutOfRange() {
-        Function<LivingEntity, Float> speedFunc = mob -> 1F;
-        return BehaviorBuilder.create((mobInstance) -> {
-            return mobInstance.group(
-                mobInstance.registered(MemoryModuleType.WALK_TARGET),
-                mobInstance.registered(MemoryModuleType.LOOK_TARGET),
-                mobInstance.present(MemoryModuleType.ATTACK_TARGET)).apply(mobInstance, (walkTarget, lookTarget, attackTarget) -> {
-                return (level, mob, num) -> {
-                    LivingEntity target = mobInstance.get(attackTarget);
-                    if (BehaviorUtils.isWithinAttackRange(mob, target, 1)) {
-                        walkTarget.erase();
-                    }
-                    else {
-                        lookTarget.set(new EntityTracker(target, true));
-                        walkTarget.set(new WalkTarget(new EntityTracker(target, false), speedFunc.apply(mob), 2));
-                    }
-                    return true;
-                };
-            });
-        });
+        return SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(PetAI::getMovementSpeedModifier);
     }
 }

@@ -27,9 +27,9 @@ public class CaptureCommands {
             .permission(Perms.COMMAND_CAPTURE_ITEM)
             .withArguments(
                 Arguments.integer(CommandArguments.AMOUNT)
-                    .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT)
+                    .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
                     .suggestions((reader, context) -> Lists.newList("1", "8", "16")).optional(),
-                Arguments.player(CommandArguments.PLAYER).optional()
+                Arguments.player(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER).optional()
             )
             .executes((context, arguments) -> giveItem(plugin, manager, context, arguments))
         );

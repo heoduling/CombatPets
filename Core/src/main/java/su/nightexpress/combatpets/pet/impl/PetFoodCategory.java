@@ -3,6 +3,7 @@ package su.nightexpress.combatpets.pet.impl;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.api.pet.FoodCategory;
 import su.nightexpress.combatpets.api.pet.FoodItem;
+import su.nightexpress.combatpets.util.PetCreator;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.StringUtil;
@@ -24,7 +25,7 @@ public class PetFoodCategory implements FoodCategory {
 
     @NotNull
     public static PetFoodCategory read(@NotNull FileConfig config, @NotNull String path, @NotNull String id) {
-        String name = ConfigValue.create(path + ".Name", StringUtil.capitalizeUnderscored(id)).read(config);
+        String name = ConfigValue.create(path + ".Name", PetCreator.getFoodCategoryName(id)).read(config);
         Map<String, FoodItem> itemMap = new HashMap<>();
 
         PetFoodCategory category = new PetFoodCategory(id, name, itemMap);

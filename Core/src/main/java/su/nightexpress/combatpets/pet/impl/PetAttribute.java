@@ -5,6 +5,7 @@ import org.bukkit.attribute.Attribute;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import su.nightexpress.combatpets.api.pet.Stat;
+import su.nightexpress.combatpets.util.PetCreator;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.StringUtil;
@@ -44,7 +45,7 @@ public class PetAttribute implements Stat {
         this.key = key;
         this.vanillaMirror = vanillaMirror;
 
-        this.setDisplayName(StringUtil.capitalizeUnderscored(id));
+        this.setDisplayName(PetCreator.getAttributeName(id));
     }
 
     public void read(@NotNull FileConfig config, @NotNull String path) {

@@ -11,5 +11,6 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class SnifferPet extends Sniffer implements PetEntity {
     public SnifferPet(@NotNull ServerLevel level) { super(EntityTypes.get("sniffer"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Sniffer> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Sniffer> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
 }

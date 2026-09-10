@@ -1,0 +1,366 @@
+PetVariant:
+  AxolotlVariant:
+    LUCY: 粉红色
+    WILD: 棕色
+    GOLD: 金色
+    CYAN: 青色
+    BLUE: 蓝色
+  AgeType:
+    BABY: 幼年
+    ADULT: 成年
+  DyeColor:
+    MAGENTA: 品红色
+    BROWN: 棕色
+    LIGHT_GRAY: 淡灰色
+    WHITE: 白色
+    LIME: 黄绿色
+    ORANGE: 橙色
+    LIGHT_BLUE: 淡蓝色
+    BLUE: 蓝色
+    GREEN: 绿色
+    BLACK: 黑色
+    CYAN: 青色
+    PINK: 粉色
+    PURPLE: 紫色
+    YELLOW: 黄色
+    GRAY: 灰色
+    RED: 红色
+  FoxType:
+    RED: 红狐
+    SNOW: 雪狐
+    NONE: 无斑纹
+    WHITE: 白袜
+    WHITEFIELD: 白斑
+    WHITE_DOTS: 白点
+    BLACK_DOTS: 黑点
+  HorseColor:
+    WHITE: 白色
+    CHESTNUT: 栗色
+    CREAMY: 奶油色
+    BLACK: 黑色
+    BROWN: 棕色
+    GRAY: 灰色
+    DARK_BROWN: 深棕色
+  LlamaColor:
+    WHITE: 白色
+    BROWN: 棕色
+    CREAMY: 奶油色
+    GRAY: 灰色
+  SheepShear:
+    SHEARED: 已剪毛
+    NORMAL: 未剪毛
+  RabbitType:
+    BROWN: 棕色
+    BLACK_AND_WHITE: 黑白相间
+    GOLD: 金色
+    SALT_AND_PEPPER: 黑白花
+    WHITE: 白色
+    THE_KILLER_BUNNY: 杀手兔
+    BLACK: 黑色
+CombatMode:
+  PROTECTIVE_AND_SUPPORTIVE: 防御并支援
+  SUPPORTIVE: 支援
+  PROTECTIVE: 防御
+  PASSIVE: 被动
+Command:
+  Argument:
+    Name:
+      Tier: 品质
+      Pet: 宠物
+      Player: 玩家
+      Amount: 数量
+      Name: 名称
+      Type: 类型
+  PlayerHelp:
+    Title: Pets 玩家
+    Desc: 查看玩家指令。
+  AdminHelp:
+    Title: Pets 管理员
+    Desc: 查看管理员指令。
+  Reload:
+    Desc: 重载插件配置。
+    Done: <gray>CombatPets 配置已重载。</gray>
+  Collection:
+    Desc: 查看你已获得的宠物。
+  AddAll:
+    Desc: 将指定品质的全部宠物加入玩家收藏。
+    Done: <gray>已将全部 <soft_yellow>%pet_tier_name%</soft_yellow> 宠物加入 <soft_yellow>%player_name%</soft_yellow> 的收藏！</gray>
+  Add:
+    Desc: 将指定宠物加入玩家收藏。
+    Done: <gray>已将 <soft_yellow>%pet_tier_name% %pet_config_name%</soft_yellow> 加入 <soft_yellow>%player_name%</soft_yellow> 的收藏！</gray>
+  Remove:
+    Desc: 从玩家收藏中移除指定宠物。
+    Done: <gray>已从 <soft_yellow>%player_name%</soft_yellow> 的收藏中移除 <soft_yellow>%pet_tier_name% %pet_config_name%</soft_yellow>！</gray>
+  RemoveAll:
+    Desc: 从玩家收藏中移除指定品质的全部宠物。
+    Done: <gray>已从 <soft_yellow>%player_name%</soft_yellow> 的收藏中移除全部 <soft_yellow>%pet_tier_name%</soft_yellow> 宠物！</gray>
+  CatchItem:
+    Desc: 给予宠物捕捉绳。
+    Done: <gray>已给予 <soft_yellow>%player_name%</soft_yellow> <soft_yellow>x%amount% %item%</soft_yellow>！</gray>
+  Food:
+    Desc: 给予宠物食物。
+    Done: <gray>已给予 <soft_yellow>%player_name%</soft_yellow> <soft_yellow>x%amount% %item%</soft_yellow>！</gray>
+  Egg:
+    Desc: 给予指定宠物蛋。
+    Done: <gray>已给予 <soft_yellow>%player_name%</soft_yellow> <soft_yellow>%pet_tier_name% %pet_config_name%</soft_yellow> 宠物蛋。</gray>
+  MysteryEgg:
+    Desc: 给予神秘宠物蛋。
+    Done: <gray>已给予 <soft_yellow>%player_name%</soft_yellow> <soft_yellow>%pet_config_name%</soft_yellow> 神秘宠物蛋。</gray>
+  RandomMysteryEgg:
+    Desc: 给予随机宠物、随机品质的神秘宠物蛋。
+    Done: <gray>已给予 <soft_yellow>%player_name%</soft_yellow> 一个随机宠物、随机品质的神秘宠物蛋。</gray>
+  Rename:
+    Desc: 重命名玩家的宠物。
+    Done: <gray>已将 <soft_yellow>%player_name%</soft_yellow> 的宠物重命名为 <soft_yellow>%pet_name%</soft_yellow>。</gray>
+  Revive:
+    Desc: 复活玩家的宠物。
+    Error:
+      Alive: <gray><soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 尚未死亡！</gray>
+    Done: <gray>已复活 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow>。</gray>
+  ClearInventory:
+    Desc: 清空玩家的宠物背包。
+    Done: <gray>已清空 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 的背包。</gray>
+  Menu:
+    Desc: 打开宠物菜单。
+  Shop:
+    Desc: 打开宠物商店。
+  AdminShop:
+    Desc: 管理宠物商店价格。
+  AdminProShop:
+    Desc: 打开管理员完整宠物蛋商店。
+  AdminAttributes:
+    Desc: 管理宠物属性满点最终值。
+  AdminMenu:
+    Desc: 打开管理员宠物测试菜单。
+  Accessory:
+    Desc: 给予宠物配饰。
+    Done: <gray>已给予 <soft_yellow>%player_display_name%</soft_yellow> <soft_yellow>%amount% x %name%</soft_yellow>。</gray>
+  ResetProgress:
+    Desc: 重置玩家宠物的升级进度。
+    Done: <gray>已重置 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 的升级进度。</gray>
+  XP:
+    Desc: 宠物经验管理命令。
+    Add:
+      Desc: 为宠物增加经验。
+      Done: <gray>已为 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 增加 <soft_yellow>%amount%</soft_yellow> 点经验。</gray>
+    Set:
+      Desc: 设置宠物经验。
+      Done: <gray>已将 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 的经验设置为 <soft_yellow>%amount%</soft_yellow>。</gray>
+    Remove:
+      Desc: 扣除宠物经验。
+      Done: <gray>已扣除 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> <soft_yellow>%amount%</soft_yellow> 点经验。</gray>
+    Reward:
+      Desc: 为玩家当前召唤的宠物增加经验。
+      Done: <gray>已为 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 增加 <soft_yellow>%amount%</soft_yellow> 点经验。</gray>
+    Penalty:
+      Desc: 扣除玩家当前召唤宠物的经验。
+      Done: <gray>已扣除 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> <soft_yellow>%amount%</soft_yellow> 点经验。</gray>
+  AspectPoints:
+    Desc: 宠物属性点管理命令。
+    Add:
+      Desc: 为宠物增加属性点。
+      Done: <gray>已为 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 增加 <soft_yellow>%amount%</soft_yellow> 个属性点。</gray>
+    Set:
+      Desc: 设置宠物属性点。
+      Done: <gray>已将 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 的属性点设置为 <soft_yellow>%amount%</soft_yellow>。</gray>
+    Remove:
+      Desc: 扣除宠物属性点。
+      Done: <gray>已扣除 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> <soft_yellow>%amount%</soft_yellow> 个属性点。</gray>
+    Reward:
+      Desc: 为玩家当前召唤的宠物增加属性点。
+      Done: <gray>已为 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> 增加 <soft_yellow>%amount%</soft_yellow> 个属性点。</gray>
+    Penalty:
+      Desc: 扣除玩家当前召唤宠物的属性点。
+      Done: <gray>已扣除 <soft_yellow>%player_name%</soft_yellow> 的宠物 <soft_yellow>%pet_name%</soft_yellow> <soft_yellow>%amount%</soft_yellow> 个属性点。</gray>
+  Syntax:
+    InvalidTier: <gray><soft_red>%input%</soft_red> 不是有效的宠物品质！</gray>
+    InvalidPet: <gray><soft_red>%input%</soft_red> 不是有效的宠物！</gray>
+    InvalidFoodCategory: <gray><soft_red>%input%</soft_red> 不是有效的食物类别！</gray>
+    InvalidFoodItem: <gray><soft_red>%input%</soft_red> 不是有效的食物！</gray>
+    InvalidCustomization: <gray><soft_red>%input%</soft_red> 不是有效的配饰类型！</gray>
+Pet:
+  Admin:
+    Attribute:
+      Target:
+        Prompt:
+        - '[title_times="20:60:20",sound="minecraft:block.lava.pop;0.8;1.0",type="title"]'
+        - <soft_yellow><b>修改属性满点值</b></soft_yellow>
+        - <gray>请输入 <soft_yellow>%name%</soft_yellow> 在全部属性点分配后的最终值。</gray>
+        - <gray>输入 <soft_yellow>reset</soft_yellow> 恢复宠物原有的 Per_Aspect 计算。</gray>
+        Updated: <gray>属性满点最终值已设置为 <soft_green>%value%</soft_green>。</gray>
+        Reset: <gray>属性目标值已重置，恢复使用宠物配置中的 Per_Aspect。</gray>
+        Invalid: <soft_red>请输入不小于 0 的有效数字，或输入 reset。</soft_red>
+        Error: <soft_red>该属性没有关联任何可用的品质属性点。</soft_red>
+  Despawn:
+    Death:
+    - '[title_times="20:60:20",sound="minecraft:entity.generic.death;0.8;1.0",type="title"]'
+    - <soft_red><b>你的宠物死亡了！</b></soft_red>
+    - <gray>请前往宠物收藏将它复活。</gray>
+    Default: <gray>宠物已收回。</gray>
+    NoWater: <gray>附近没有适合的水域，<soft_yellow>%pet_config_default_name%</soft_yellow> 已自动收回至宠物收藏。</gray>
+    TeleportFailed: <gray>宠物无法传送到你身边，已自动收回至宠物收藏。</gray>
+  Claim:
+    Error:
+      AlreadyHave: <soft_red>你已经拥有这只宠物了！</soft_red>
+      ReachedLimit: <soft_red>你最多只能拥有 <orange>%amount%</orange> 只 %pet_tier_name% 宠物！</soft_red>
+    Success:
+    - '[title_times="20:60:20",sound="minecraft:entity.player.levelup;0.8;1.0",type="title"]'
+    - <soft_green><b>已获得宠物！</b></soft_green>
+    - '<gray>使用 <soft_green>/pet collection</soft_green> 查看你的宠物收藏。</gray>'
+  MysteryEgg:
+    Hatch: '[sound="minecraft:entity.evoker.prepare_attack;0.8;1.0"]<gray>你将 <light_purple>神秘宠物蛋</light_purple> 孵化成了 <light_purple>%pet_tier_name% %pet_config_default_name%</light_purple>！</gray>'
+  Catch:
+    Process:
+      Progress:
+      - '[title_times="0:20:0",type="title"]'
+      - <soft_yellow><b>正在捕捉...</b></soft_yellow>
+      - <gray><green><b>成功 </b></green>→ <green>%success%% </green>| <red>%failure%% </red>← <red><b>失败</b></red></gray>
+      Success:
+      - '[title_times="0:50:0",sound="minecraft:entity.player.levelup;0.8;1.0",type="title"]'
+      - <soft_green><b>生物捕捉成功！</b></soft_green>
+      - <gray>你捕捉了 <soft_green>%pet_config_default_name%</soft_green> <gray>(<white>%pet_tier_name%</white>)</gray></gray>
+      Escaped:
+      - '[title_times="0:50:0",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <orange><b>生物逃跑了！</b></orange>
+      - <gray>本次捕捉已结束，你可以再次尝试捕捉它。</gray>
+      Failure:
+      - '[title_times="0:50:0",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>捕捉失败！</b></soft_red>
+      - <gray>这次运气不好，再试一次吧！</gray>
+      TooFarAway:
+      - '[title_times="0:50:0",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>捕捉失败！</b></soft_red>
+      - <gray>下次请靠近一些！</gray>
+    Error:
+      NotCatchable: <gray>无法捕捉 <soft_red>%name%</soft_red>。</gray>
+      NotPermitted: <gray>你没有捕捉 <soft_red>%name%</soft_red> 的权限。</gray>
+      Conditions: <gray><soft_red>%name%</soft_red> 的生命值必须降至 <soft_red>%amount%%</soft_red> 或以下。</gray>
+      AlreadyCapturing: <soft_red>你正在捕捉另一只生物。</soft_red>
+      NoTier: <soft_red>当前没有启用可捕捉的宠物品质。</soft_red>
+      StartFailed: <soft_red>无法开始捕捉，请稍后重试。</soft_red>
+  Leveling:
+    LevelUp:
+    - '[title_times="20:60:20",sound="minecraft:entity.player.levelup;0.8;1.0",type="title"]'
+    - <soft_green><b>宠物升级！</b></soft_green>
+    - <gray><soft_green>%pet_name%</soft_green> 已升至 <soft_green>%pet_level%</soft_green> 级！</gray>
+    LevelDown:
+    - '[title_times="20:60:20",sound="minecraft:entity.blaze.death;0.8;1.0",type="title"]'
+    - <soft_red><b>宠物降级！</b></soft_red>
+    - <gray><soft_red>%pet_name%</soft_red> 已降至 <soft_red>%pet_level%</soft_red> 级 :(</gray>
+  XP:
+    Lose:
+      ByDeath: <soft_red>[！] 你的宠物因死亡损失了 %amount% 点经验。</soft_red>
+    Gain:
+      ByMob: '[type="action_bar"]<soft_yellow>%pet_name%：</soft_yellow><orange>+%amount% 经验</orange>'
+  Rename:
+    Prompt:
+    - '[title_times="20:60:20",sound="minecraft:block.lava.pop;0.8;1.0",type="title"]'
+    - <soft_yellow><b>正在重命名</b></soft_yellow>
+    - <gray>请在聊天栏输入新的宠物名称。</gray>
+    Error:
+      NoNametag:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>无法重命名！</b></soft_red>
+      - <gray>你需要一个<soft_red>命名牌</soft_red>。</gray>
+      TooLong:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>名称过长！</b></soft_red>
+      - <gray>名称最多只能有 <soft_red>%amount%</soft_red> 个字符！</gray>
+      TooShort:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>名称过短！</b></soft_red>
+      - <gray>名称至少需要 <soft_red>%amount%</soft_red> 个字符！</gray>
+      Forbidden:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>名称不可用！</b></soft_red>
+      - <gray>名称中含有<soft_red>违禁</soft_red>字符！</gray>
+    Success:
+    - '[title_times="20:60:20",sound="minecraft:block.note_block.bell;0.8;1.0",type="title"]'
+    - <soft_green><b>宠物已重命名！</b></soft_green>
+    - <gray>你的宠物现在叫作 <soft_green>%pet_name%</soft_green></gray>
+  Revive:
+    Error:
+      NotEnoughFunds:
+      - '[title_times="20:60:20",sound="minecraft:block.anvil.place;0.8;1.0",type="title"]'
+      - <soft_red><b>余额不足！</b></soft_red>
+      - <gray>复活 <soft_red>%pet_name%</soft_red> 需要 <soft_red>%amount%</soft_red>。</gray>
+    Success:
+    - '[title_times="20:60:20",sound="minecraft:item.totem.use;0.8;1.0",type="title"]'
+    - <soft_green><b>宠物已复活！</b></soft_green>
+    - <gray>你花费 <soft_green>%amount%</soft_green> 复活了 <soft_green>%pet_name%</soft_green>。</gray>
+  Error:
+    DataLoading: <soft_yellow>宠物数据正在加载，请稍后再试。</soft_yellow>
+    NoActivePet:
+    - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+    - <soft_red><b>没有已召唤的宠物！</b></soft_red>
+    - <gray>你需要先召唤一只宠物。</gray>
+    NotYour: '[sound="minecraft:entity.villager.no;0.8;1.0"]<soft_red>这不是你的宠物！</soft_red>'
+    BadWorld: <soft_red>当前世界已禁用宠物。</soft_red>
+    AlreadyCollected: <soft_red>%player_name% 已经拥有 %pet_tier_name% %pet_config_name%！</soft_red>
+    NotCollected: <soft_red>该玩家的收藏中没有这只宠物！</soft_red>
+    NotSummoned: <soft_red>该玩家没有召唤宠物！</soft_red>
+  Spawn:
+    Warning:
+      WaterRestricted: <soft_yellow>%pet_config_default_name% 是水域限定宠物，在陆地上不会攻击；附近找不到水域时会自动收回。</soft_yellow>
+    Error:
+      Dead:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>宠物已死亡！</b></soft_red>
+      - <gray>你需要先复活它才能召唤！</gray>
+      Already:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>已有召唤中的宠物！</b></soft_red>
+      - <gray>你同时只能召唤一只宠物。</gray>
+      BadPlace:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>位置不合适！</b></soft_red>
+      - <gray>这里没有足够空间召唤宠物。</gray>
+      ProtectedArea: <soft_red>你没有权限在这个领地中召唤宠物。</soft_red>
+      Peaceful:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>和平模式无法召唤！</b></soft_red>
+      - <gray>敌对宠物只能在简单、普通或困难模式中召唤。</gray>
+  Release:
+    Success: <gray>你放生了 <soft_yellow>%pet_name%</soft_yellow>！</gray>
+    Error:
+      BadWorld: <soft_red>你不能在当前世界放生宠物！</soft_red>
+      ProtectedArea: <soft_red>你不能在这里放生宠物！</soft_red>
+Shop:
+  Admin:
+    Price:
+      Prompt:
+      - '[title_times="20:60:20",sound="minecraft:block.lava.pop;0.8;1.0",type="title"]'
+      - <soft_yellow><b>修改商店价格</b></soft_yellow>
+      - <gray>请输入 <soft_yellow>%pet_tier_name% %pet_config_default_name%</soft_yellow> 的售价。</gray>
+      - <gray>输入 <soft_yellow>0</soft_yellow> 恢复该品质的默认价格。</gray>
+      Updated: <gray>已将 <soft_yellow>%pet_tier_name% %pet_config_default_name%</soft_yellow> 的售价设置为 <soft_green>%price%</soft_green>。</gray>
+      Error:
+        Currency: <soft_red>该价格使用的货币不可用，价格未修改。</soft_red>
+        Invalid: <soft_red>请输入不小于 0 的有效数字；输入 0 可恢复品质默认价格。</soft_red>
+  Purchase:
+    Error:
+      NotEnoughFunds:
+      - '[title_times="20:60:20",sound="minecraft:entity.villager.no;0.8;1.0",type="title"]'
+      - <soft_red><b>余额不足！</b></soft_red>
+      - <gray>购买 <soft_red>%pet_config_default_name%</soft_red> 需要 <soft_red>%price%</soft_red>。</gray>
+    Success:
+    - '[title_times="20:60:20",sound="minecraft:block.note_block.bell;0.8;1.0",type="title"]'
+    - <soft_green><b>购买成功！</b></soft_green>
+    - <gray>你花费 <soft_green>%price%</soft_green> 购买了 <soft_green>%pet_config_default_name%</soft_green> 的宠物蛋。</gray>
+Customizer:
+  Interact:
+    Pet:
+      Error:
+        NotYour: <soft_red>你不能为其他玩家的宠物使用配饰！</soft_red>
+        WrongType: <soft_red>这件配饰不适用于该宠物！</soft_red>
+        AlreadyHas: <soft_red>该宠物已经应用了这件配饰！</soft_red>
+State:
+  Enabled: 已启用
+  Disabled: 已禁用
+  'Yes': 是
+  'No': 否
+Other:
+  None: 无
+  Infinity: 无限
+Error:
+  NoPermission: <soft_red>你没有权限执行此操作！</soft_red>

@@ -11,5 +11,14 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class AxolotlPet extends Axolotl implements PetEntity {
     public AxolotlPet(@NotNull ServerLevel level) { super(EntityTypes.get("axolotl"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Axolotl> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Axolotl> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
+
+    @Override
+    protected void handleAirSupply(ServerLevel level, int air) {
+        // A summoned pet must remain usable beside its owner on land. Vanilla
+        // Axolotl#handleAirSupply starts dealing dry-out damage after its air
+        // supply is exhausted, so keep the pet hydrated instead.
+        this.rehydrate();
+    }
 }

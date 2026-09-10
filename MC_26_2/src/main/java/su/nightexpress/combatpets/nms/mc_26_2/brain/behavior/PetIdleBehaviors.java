@@ -13,15 +13,10 @@ import net.minecraft.world.entity.ai.behavior.OneShot;
 import net.minecraft.world.entity.ai.behavior.declarative.BehaviorBuilder;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.memory.WalkTarget;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.craftbukkit.event.CraftEventFactory;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.api.pet.PetEntityBridge;
-
-import java.util.HashSet;
+import su.nightexpress.combatpets.nms.mc_26_2.brain.PetAI;
 
 public class PetIdleBehaviors {
 
@@ -37,8 +32,11 @@ public class PetIdleBehaviors {
                     ActivePet holder = PetEntityBridge.getByMobId(mob.getUUID());
                     if (holder == null) return false;
 
-                    CraftPlayer craftPlayer = (CraftPlayer) holder.getOwner();
-                    ServerPlayer owner = craftPlayer.getHandle();
+                    ServerPlayer owner = PetAI.getLocalOwner(holder);
+                    if (owner == null) {
+                        holder.moveToOwner();
+                        return false;
+                    }
 
                     memLookTarget.set(new EntityTracker(owner, true));
                     return true;
@@ -58,24 +56,29 @@ public class PetIdleBehaviors {
                         ActivePet holder = PetEntityBridge.getByMobId(pet.getUUID());
                         if (holder == null) return false;
 
-                        CraftPlayer craftPlayer = (CraftPlayer) holder.getOwner();
-                        ServerPlayer owner = craftPlayer.getHandle();
+                        ServerPlayer owner = PetAI.getLocalOwner(holder);
+                        if (owner == null) {
+                            holder.moveToOwner();
+                            return false;
+                        }
 
-                        boolean isFarAway = !pet.closerThan(owner, FOLLOW_RANGE.maxInclusive() + 1);
+                        // A mounted owner is already moving together with this pet.
+                        // Following the rider makes tall mounts path toward a point
+                        // above themselves and can repeatedly launch them upward.
+                        if (pet.hasPassenger(owner)) return false;
+
+                        boolean isFarAway = PetAI.isOwnerTooFar(pet, owner);
                         if (isFarAway) {
                             pet.getBrain().eraseMemory(MemoryModuleType.ANGRY_AT);
                             pet.getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
-                            pet.teleportTo(world, owner.getX(), owner.getY(), owner.getZ(), new HashSet<>(), 0F, 0F, true);
+                            holder.moveToOwner();
                             return false;
                         }
 
                         if (!pet.closerThan(owner, FOLLOW_RANGE.minInclusive())) {
-                            EntityTargetLivingEntityEvent event = CraftEventFactory.callEntityTargetLivingEvent(pet, owner, EntityTargetEvent.TargetReason.FOLLOW_LEADER);
-                            if (event.isCancelled()) return false;
-
                             boolean forEyes = pet.getType() == EntityTypes.get("allay");
 
-                            WalkTarget walkTarget = new WalkTarget(new EntityTracker(owner, forEyes), 1F, FOLLOW_RANGE.minInclusive() - 1);
+                            WalkTarget walkTarget = new WalkTarget(new EntityTracker(owner, forEyes), PetAI.getMovementSpeedModifier(pet), FOLLOW_RANGE.minInclusive() - 1);
                             memLookTarget.set(new EntityTracker(owner, true));
                             memWalkTarget.set(walkTarget);
                             return true;

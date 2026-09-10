@@ -38,15 +38,15 @@ public class WardrobeCommands {
             .withArguments(
                 variantArgument(plugin),
                 Arguments.string(CommandArguments.NAME)
-                    .localized(CoreLang.COMMAND_ARGUMENT_NAME_NAME)
+                    .localized(Lang.COMMAND_ARGUMENT_NAME_NAME)
                     .suggestions((reader, context) -> {
                         EntityVariant<?> variant = VariantRegistry.getVariant(reader.getArgs()[reader.getArgs().length - 2]);
                         return variant == null ? Collections.emptyList() : variant.getHandler().rawValues();
                     }),
-                Arguments.integer(CommandArguments.AMOUNT).localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT)
+                Arguments.integer(CommandArguments.AMOUNT).localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
                     .optional()
                     .suggestions((reader, context) -> IntStream.range(1, 17).boxed().map(String::valueOf).toList()),
-                Arguments.player(CommandArguments.PLAYER)
+                Arguments.player(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER)
                     .optional()
             )
             .executes((context, arguments) -> giveAccessory(plugin, manager, context, arguments))
@@ -58,7 +58,7 @@ public class WardrobeCommands {
         return Commands.argument(CommandArguments.TYPE, (context, string) -> Optional.ofNullable(VariantRegistry.getVariant(string))
                 .orElseThrow(() -> CommandSyntaxException.custom(Lang.ERROR_COMMAND_INVALID_VARIANT_ARGUMENT))
             )
-            .localized(CoreLang.COMMAND_ARGUMENT_NAME_TYPE)
+            .localized(Lang.COMMAND_ARGUMENT_NAME_TYPE)
             .suggestions((reader, context) -> VariantRegistry.getVariantNames());
     }
 

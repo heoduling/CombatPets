@@ -12,6 +12,7 @@ import su.nightexpress.combatpets.api.pet.type.CombatMode;
 import su.nightexpress.combatpets.config.Config;
 import su.nightexpress.combatpets.wardrobe.PetWardrobe;
 import su.nightexpress.combatpets.pet.AttributeRegistry;
+import su.nightexpress.combatpets.pet.impl.PetTier;
 import su.nightexpress.combatpets.util.PetUtils;
 import su.nightexpress.nightcore.util.placeholder.Placeholder;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderMap;
@@ -111,12 +112,12 @@ public class PetData implements Placeholder {
         return this.placeholderMap;
     }
 
-    public void refresh() {
+    public synchronized void refresh() {
         this.updateXP();
         this.tryRevive();
     }
 
-    public void resetXP() {
+    public synchronized void resetXP() {
         this.setLevel(1);
         this.setXP(0);
         this.setAspectPoints(0);
@@ -125,7 +126,7 @@ public class PetData implements Placeholder {
         this.updateXP();
     }
 
-    public void updateXP() {
+    public synchronized void updateXP() {
         boolean isMaxLevel = this.getLevel() >= this.getMaxLevel();
         if (this.getXP() >= this.getRequiredXP() && (!isMaxLevel)) {
             this.upLevel(this.getXP() - this.getRequiredXP());
@@ -136,7 +137,7 @@ public class PetData implements Placeholder {
         }
     }
 
-    public boolean tryRevive() {
+    public synchronized boolean tryRevive() {
         if (this.isReviveTime()) {
             this.revive();
             return true;
@@ -144,12 +145,12 @@ public class PetData implements Placeholder {
         return false;
     }
 
-    public void revive() {
+    public synchronized void revive() {
         this.setHealth(this.getAttributeValue(AttributeRegistry.MAX_HEALTH));
         this.setReviveDate(0L);
     }
 
-    public void removeXP(int remove) {
+    public synchronized void removeXP(int remove) {
         remove = Math.abs(remove);
 
         int toDown = this.getXPToLevelDown();
@@ -168,7 +169,7 @@ public class PetData implements Placeholder {
         this.setXP(this.getXP() - remove);
     }
 
-    public void addXP(int gain) {
+    public synchronized void addXP(int gain) {
         gain = Math.abs(gain);
 
         int toUp = this.getXPToLevelUp();
@@ -187,7 +188,7 @@ public class PetData implements Placeholder {
         this.setXP(this.getXP() + gain);
     }
 
-    public void upLevel(int expLeft) {
+    public synchronized void upLevel(int expLeft) {
         this.setLevel(this.getLevel() + 1);
 
         int expReq = this.getRequiredXP();
@@ -206,7 +207,7 @@ public class PetData implements Placeholder {
         }
     }
 
-    public void downLevel(int expLeft) {
+    public synchronized void downLevel(int expLeft) {
         if (this.getLevel() == 1) return;
         this.setLevel(this.getLevel() - 1);
 
@@ -259,7 +260,7 @@ public class PetData implements Placeholder {
         return this.name;
     }
 
-    public void setName(@NotNull String name) {
+    public synchronized void setName(@NotNull String name) {
         this.name = name;
     }
 
@@ -267,7 +268,7 @@ public class PetData implements Placeholder {
         return silent;
     }
 
-    public void setSilent(boolean silent) {
+    public synchronized void setSilent(boolean silent) {
         this.silent = silent;
     }
 
@@ -275,7 +276,7 @@ public class PetData implements Placeholder {
         return reviveDate;
     }
 
-    public void setReviveDate(long reviveDate) {
+    public synchronized void setReviveDate(long reviveDate) {
         this.reviveDate = reviveDate;
     }
 
@@ -295,7 +296,7 @@ public class PetData implements Placeholder {
         return this.health;
     }
 
-    public void setHealth(double health) {
+    public synchronized void setHealth(double health) {
         this.health = Math.max(0D, health);
     }
 
@@ -303,7 +304,7 @@ public class PetData implements Placeholder {
         return this.foodLevel;
     }
 
-    public void setFoodLevel(double foodLevel) {
+    public synchronized void setFoodLevel(double foodLevel) {
         this.foodLevel = Math.max(0D, foodLevel);
     }
 
@@ -315,7 +316,7 @@ public class PetData implements Placeholder {
         return this.getTier().getMaxLevel();
     }
 
-    public void setLevel(int level) {
+    public synchronized void setLevel(int level) {
         this.level = Math.max(1, level);
     }
 
@@ -323,7 +324,7 @@ public class PetData implements Placeholder {
         return this.xp;
     }
 
-    public void setXP(int xp) {
+    public synchronized void setXP(int xp) {
         this.xp = xp;
     }
 
@@ -343,15 +344,15 @@ public class PetData implements Placeholder {
         return this.aspectPoints;
     }
 
-    public void setAspectPoints(int amount) {
+    public synchronized void setAspectPoints(int amount) {
         this.aspectPoints = Math.max(0, amount);
     }
 
-    public void addAspectPoints(int points) {
+    public synchronized void addAspectPoints(int points) {
         this.setAspectPoints(this.getAspectPoints() + Math.abs(points));
     }
 
-    public void removeAspectPoints(int points) {
+    public synchronized void removeAspectPoints(int points) {
         this.setAspectPoints(this.getAspectPoints() - Math.abs(points));
     }
 
@@ -360,7 +361,7 @@ public class PetData implements Placeholder {
         return this.aspects;
     }
 
-    public void setAspects(@NotNull Map<String, Integer> aspects) {
+    public synchronized void setAspects(@NotNull Map<String, Integer> aspects) {
         this.aspects = aspects;
     }
 
@@ -372,17 +373,17 @@ public class PetData implements Placeholder {
         return this.getAspects().getOrDefault(aspectId.toLowerCase(), 0);
     }
 
-    public void addAspect(@NotNull Aspect aspect, int amount) {
+    public synchronized void addAspect(@NotNull Aspect aspect, int amount) {
         int set = this.getAspect(aspect) + amount;
         int max = this.getTier().getAspectMax(aspect);
         this.setAspect(aspect, Math.min(set, max));
     }
 
-    public void setAspect(@NotNull Aspect aspect, int value) {
+    public synchronized void setAspect(@NotNull Aspect aspect, int value) {
         this.setAspect(aspect.getId(), value);
     }
 
-    public void setAspect(@NotNull String aspectId, int value) {
+    public synchronized void setAspect(@NotNull String aspectId, int value) {
         this.getAspects().put(aspectId.toLowerCase(), Math.max(0, value));
     }
 
@@ -396,7 +397,10 @@ public class PetData implements Placeholder {
         for (Aspect aspect : PetAPI.getPetManager().getAspects()) {
             if (aspect.getAttributes().contains(attributeName)) {
                 int aspectValue = this.getAspect(aspect);
-                double aspectModifier = this.getConfig().getAttributePerAspect(attributeName);
+                Stat stat = AttributeRegistry.getById(attributeName);
+                double aspectModifier = this.tier instanceof PetTier petTier && stat != null
+                    ? petTier.getAttributePerAspect(this.template, stat)
+                    : this.getConfig().getAttributePerAspect(attributeName);
                 double total = aspectModifier * aspectValue;
 
                 value += total;
@@ -411,13 +415,17 @@ public class PetData implements Placeholder {
         return this.inventory;
     }
 
-    public void setInventory(@NotNull ItemStack[] inventory) {
+    public synchronized void setInventory(@NotNull ItemStack[] inventory) {
         this.setInventory(new ArrayList<>(Arrays.asList(inventory)));
     }
 
-    public void setInventory(@NotNull List<ItemStack> inventory) {
+    public synchronized void setInventory(@NotNull List<ItemStack> inventory) {
         inventory.removeIf(Objects::isNull);
         this.inventory = inventory;
+    }
+
+    public synchronized void clearInventory() {
+        this.inventory.clear();
     }
 
     @NotNull
@@ -425,7 +433,7 @@ public class PetData implements Placeholder {
         return this.equipment;
     }
 
-    public void setEquipment(@NotNull Map<EquipmentSlot, ItemStack> equipment) {
+    public synchronized void setEquipment(@NotNull Map<EquipmentSlot, ItemStack> equipment) {
         this.equipment = new HashMap<>();
         equipment.forEach(this::setEquipment);
     }
@@ -435,7 +443,7 @@ public class PetData implements Placeholder {
         return this.equipment.computeIfAbsent(type, item -> new ItemStack(Material.AIR));
     }
 
-    public void setEquipment(@NotNull EquipmentSlot type, @Nullable ItemStack item) {
+    public synchronized void setEquipment(@NotNull EquipmentSlot type, @Nullable ItemStack item) {
         this.equipment.put(type, item == null ? new ItemStack(Material.AIR) : item);
     }
 
@@ -444,7 +452,7 @@ public class PetData implements Placeholder {
         return this.combatMode;
     }
 
-    public void setCombatMode(@NotNull CombatMode combatMode) {
+    public synchronized void setCombatMode(@NotNull CombatMode combatMode) {
         this.combatMode = combatMode;
     }
 
@@ -453,7 +461,36 @@ public class PetData implements Placeholder {
         return this.wardrobe;
     }
 
-    public void setWardrobe(@NotNull PetWardrobe wardrobe) {
+    public synchronized void setWardrobe(@NotNull PetWardrobe wardrobe) {
         this.wardrobe = wardrobe;
+    }
+
+    /**
+     * Creates a detached value object for asynchronous database serialization.
+     * The lock is per pet and is held only while copying in-memory values.
+     */
+    @NotNull
+    public synchronized PetData copyForPersistence() {
+        List<ItemStack> inventoryCopy = this.inventory.stream().map(ItemStack::clone).toList();
+        Map<EquipmentSlot, ItemStack> equipmentCopy = new HashMap<>();
+        this.equipment.forEach((slot, item) -> equipmentCopy.put(slot, item.clone()));
+
+        return new PetData(
+            this.template,
+            this.tier,
+            this.name,
+            this.silent,
+            this.reviveDate,
+            this.health,
+            this.foodLevel,
+            this.level,
+            this.xp,
+            this.aspectPoints,
+            new HashMap<>(this.aspects),
+            new ArrayList<>(inventoryCopy),
+            equipmentCopy,
+            this.combatMode,
+            new PetWardrobe(this.wardrobe.getAccessories())
+        );
     }
 }

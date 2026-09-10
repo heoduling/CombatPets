@@ -8,6 +8,7 @@ import su.nightexpress.combatpets.util.PetUtils;
 import su.nightexpress.nightcore.db.AbstractUser;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class PetUser extends AbstractUser {
 
@@ -19,7 +20,7 @@ public class PetUser extends AbstractUser {
     public static PetUser create(@NotNull UUID uuid, @NotNull String name) {
         long dateCreated = System.currentTimeMillis();
         long lastOnline = System.currentTimeMillis();
-        Map<String, PetData> petMap = new HashMap<>();
+        Map<String, PetData> petMap = new ConcurrentHashMap<>();
 
         PetUser user = new PetUser(uuid, name, dateCreated, lastOnline, petMap);
         user.load(new HashMap<>());
@@ -33,7 +34,7 @@ public class PetUser extends AbstractUser {
                    @NotNull Map<String, PetData> petMap
     ) {
         super(uuid, name, dateCreated, lastOnline);
-        this.petMap = new HashMap<>(petMap);
+        this.petMap = new ConcurrentHashMap<>(petMap);
         this.loaded = true;
     }
 
@@ -41,7 +42,7 @@ public class PetUser extends AbstractUser {
         return this.loaded;
     }
 
-    public void load(@NotNull Map<String, PetData> petMap) {
+    public synchronized void load(@NotNull Map<String, PetData> petMap) {
         this.petMap.clear();
         this.petMap.putAll(petMap);
         this.petMap.values().removeIf(Objects::isNull);
@@ -54,12 +55,24 @@ public class PetUser extends AbstractUser {
         return this.petMap;
     }
 
-    public void addPet(@NotNull PetData petData) {
+    /** Returns detached pet values for asynchronous persistence. */
+    @NotNull
+    public synchronized Map<String, PetData> getPetsSnapshot() {
+        Map<String, PetData> snapshot = new HashMap<>();
+        this.petMap.forEach((key, data) -> snapshot.put(key, data.copyForPersistence()));
+        return Map.copyOf(snapshot);
+    }
+
+    public synchronized void addPet(@NotNull PetData petData) {
         this.petMap.putIfAbsent(PetUtils.getPetKey(petData.getTier(), petData.getConfig()), petData);
         petData.refresh();
     }
 
-    public boolean removePet(@NotNull Template config, @NotNull Tier tier) {
+    public synchronized void putPet(@NotNull PetData petData) {
+        this.petMap.put(PetUtils.getPetKey(petData.getTier(), petData.getConfig()), petData);
+    }
+
+    public synchronized boolean removePet(@NotNull Template config, @NotNull Tier tier) {
         return this.petMap.remove(PetUtils.getPetKey(tier, config)) != null;
     }
 

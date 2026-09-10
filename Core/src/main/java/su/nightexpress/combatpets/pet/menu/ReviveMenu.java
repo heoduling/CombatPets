@@ -54,7 +54,7 @@ public class ReviveMenu extends ConfirmMenu {
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Revive the pet?"), MenuSize.CHEST_9);
+        return Config.createMenuOptions(BLACK.enclose("确定要复活宠物吗？"), MenuSize.CHEST_9);
     }
 
     @Override
@@ -64,13 +64,13 @@ public class ReviveMenu extends ConfirmMenu {
 
         ItemStack acceptItem = ItemUtil.getSkinHead(SKIN_CHECK_MARK);
         ItemUtil.editMeta(acceptItem, meta -> {
-            meta.setDisplayName(LIGHT_GREEN.enclose(BOLD.enclose("Accept")));
+            meta.setDisplayName(LIGHT_GREEN.enclose(BOLD.enclose("确定复活")));
         });
         list.add(new MenuItem(acceptItem).setPriority(10).setSlots(8).setHandler(this.acceptHandler));
 
         ItemStack denyItem = ItemUtil.getSkinHead(SKIN_WRONG_MARK);
         ItemUtil.editMeta(denyItem, meta -> {
-            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("Cancel")));
+            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("取消")));
         });
         list.add(new MenuItem(denyItem).setPriority(10).setSlots(0).setHandler(this.declineHandler));
 
@@ -84,8 +84,8 @@ public class ReviveMenu extends ConfirmMenu {
         ).read(cfg);
 
         this.iconLore = ConfigValue.create("PetIcon.Lore", Lists.newList(
-            LIGHT_GRAY.enclose("You are about to revive this pet."),
-                LIGHT_GRAY.enclose("It will cost you " + LIGHT_RED.enclose("$" + TIER_DEATH_REVIVE_COST))
+            LIGHT_GRAY.enclose("你即将复活这只宠物。"),
+                LIGHT_GRAY.enclose("需要花费 " + LIGHT_RED.enclose("$" + TIER_DEATH_REVIVE_COST))
         )).read(cfg);
 
         this.iconSlot = ConfigValue.create("PetIcon.Slot", 4).read(cfg);
