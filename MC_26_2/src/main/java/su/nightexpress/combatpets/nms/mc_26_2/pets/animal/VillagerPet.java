@@ -29,6 +29,14 @@ public class VillagerPet extends Villager implements PetEntity {
 
     public VillagerPet(@NotNull ServerLevel level) {
         super(EntityTypes.get("villager"), level);
+        // Vanilla ShowTradesToPlayer clears MAINHAND, which would delete pet equipment.
+        this.getBrain().removeAllBehaviors();
+    }
+
+    @Override
+    public void refreshBrain(@NotNull ServerLevel level) {
+        super.refreshBrain(level);
+        this.getBrain().removeAllBehaviors();
     }
 
     @Override

@@ -52,7 +52,7 @@ public class ReleaseMenu extends ConfirmMenu {
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Release the pet?"), MenuSize.CHEST_9);
+        return Config.createMenuOptions(BLACK.enclose("确定要放生宠物吗？"), MenuSize.CHEST_9);
     }
 
     @Override
@@ -62,13 +62,13 @@ public class ReleaseMenu extends ConfirmMenu {
 
         ItemStack acceptItem = ItemUtil.getSkinHead(SKIN_CHECK_MARK);
         ItemUtil.editMeta(acceptItem, meta -> {
-            meta.setDisplayName(LIGHT_GREEN.enclose(BOLD.enclose("Accept")));
+            meta.setDisplayName(LIGHT_GREEN.enclose(BOLD.enclose("确定放生")));
         });
         list.add(new MenuItem(acceptItem).setPriority(10).setSlots(8).setHandler(this.acceptHandler));
 
         ItemStack denyItem = ItemUtil.getSkinHead(SKIN_WRONG_MARK);
         ItemUtil.editMeta(denyItem, meta -> {
-            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("Cancel")));
+            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("取消")));
         });
         list.add(new MenuItem(denyItem).setPriority(10).setSlots(0).setHandler(this.declineHandler));
 
@@ -82,7 +82,7 @@ public class ReleaseMenu extends ConfirmMenu {
         ).read(cfg);
 
         this.iconLore = ConfigValue.create("PetIcon.Lore", Lists.newList(
-            LIGHT_GRAY.enclose("You are about to release this pet.")
+            LIGHT_GRAY.enclose("这只宠物将被永久放生。")
         )).read(cfg);
 
         this.iconSlot = ConfigValue.create("PetIcon.Slot", 4).read(cfg);

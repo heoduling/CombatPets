@@ -1,3 +1,10 @@
+PetVariant:
+  AxolotlVariant:
+    LUCY: 粉红色
+    WILD: 棕色
+    GOLD: 金色
+    CYAN: 青色
+    BLUE: 蓝色
 Command:
   AddExp:
     Usage: <player> <amount> [tier] [pet]
@@ -44,6 +51,10 @@ Command:
     Done: '#d4d9d8重置 #fdba5e%player_name%#d4d9d8 的 #fdba5e%pet_name%#d4d9d8 宠物的等级进度.'
   Menu:
     Desc: 打开你的宠物菜单.
+  AdminMenu:
+    Desc: 打开管理员宠物测试菜单.
+  AdminProShop:
+    Desc: 打开管理员完整宠物蛋商店.
   EggShop:
     Desc: 打开蛋商店.
   Customizations:
@@ -55,6 +66,8 @@ Pet:
       - '#fd5e5e&l你的宠物死了!'
       - '#d4d9d8在你的收藏中复活它.'
     Default: '#d4d9d8宠物已消失.'
+    NoWater: '#d4d9d8附近没有适合的水域，#ffeea2%pet_config_default_name%#d4d9d8 已自动收回至宠物收藏.'
+    TeleportFailed: '#d4d9d8宠物无法传送到你身边，已自动收回至宠物收藏.'
   Claim:
     Error:
       AlreadyHave: '#fd5e5e你已经拥有这个宠物了!'
@@ -76,7 +89,7 @@ Pet:
       Escaped:
         - <! type:"titles:0:50:30" sound:"ENTITY_VILLAGER_NO" !>
         - '#fdba5e&l生物逃跑了!'
-        - '#d4d9d8它似乎不想成为你的宠物...'
+        - '#d4d9d8本次捕捉已结束，你可以再次尝试捕捉它!'
       Failure:
         - <! type:"titles:0:50:30" sound:"ENTITY_VILLAGER_NO" !>
         - '#fd5e5e&l生物未被捕获!'
@@ -143,6 +156,7 @@ Pet:
   Error:
     InvalidTier: '#fd5e5e该等级不存在!'
     InvalidConfig: '#fd5e5e该宠物不存在!'
+    DataLoading: '#ffeea2宠物数据正在加载，请稍后再试。'
     NoActivePet:
       - <! type:"titles:20:60:20" sound:"ENTITY_VILLAGER_NO" !>
       - '#fd5e5e&l没有活跃的宠物!'
@@ -152,6 +166,8 @@ Pet:
     NotCollected: '#fd5e5e玩家的收藏中没有这样的宠物!'
     NotSummoned: '#fd5e5e玩家没有召唤宠物!'
   Spawn:
+    Warning:
+      WaterRestricted: '#ffeea2%pet_config_default_name% 是水域限定宠物，在陆地上不会攻击；附近找不到水域时会自动收回.'
     Error:
       Dead:
         - <! type:"titles:20:60:20" sound:"ENTITY_VILLAGER_NO" !>
@@ -165,6 +181,11 @@ Pet:
         - <! type:"titles:20:60:20" sound:"ENTITY_VILLAGER_NO" !>
         - '#fd5e5e&l召唤位置不合适!'
         - '#d4d9d8此处没有足够的空间召唤宠物.'
+      ProtectedArea: '#fd5e5e你没有权限在这个领地中召唤宠物.'
+      Peaceful:
+        - <! type:"titles:20:60:20" sound:"ENTITY_VILLAGER_NO" !>
+        - '#fd5e5e&l和平模式无法召唤!'
+        - '#d4d9d8敌对宠物只能在简单、普通或困难模式中召唤.'
   Release:
     Success: '#d4d9d8你释放了 #ffeea2%pet_name%#d4d9d8!'
     Error:

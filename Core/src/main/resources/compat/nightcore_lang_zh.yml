@@ -1,0 +1,147 @@
+Command:
+  ArgumentName:
+    Generic: 值
+    Type: 类型
+    Number: 数字
+    Name: 名称
+    Amount: 数量
+    Player: 玩家
+    World: 世界
+    ItemType: 物品类型
+    BlockType: 方块类型
+    Enchantment: 附魔
+  Usage:
+    RequiredArgument: <c:#FF6B6B><shadow:#9C172B:1.0><%name%></shadow></c>
+    OptionalArgument: <c:#4ADE80><shadow:#15803D:1.0>[%name%]</shadow></c>
+    OptionalFlag: <c:#60A5FA><shadow:#1D4ED8:1.0>[%name%]</shadow></c>
+  Help:
+    Desc: 查看全部子命令。
+  Reload:
+    Desc: 重载插件。
+  CheckPerm:
+    Desc: 查看玩家的权限信息。
+  DumpItem:
+    Desc: 查看物品的 NBT 信息。
+  EconomyBridge:
+    Name: 经济桥接
+    Desc: 经济桥接管理命令。
+    FromItem:
+      Desc: 根据手持物品创建货币。
+  Syntax:
+    GenericError: <gray><soft_red>%input%</soft_red> 不是有效的 <soft_red>%name%</soft_red> 参数！</gray>
+    NumberNotDecimal: <gray><soft_red>%name%</soft_red> 参数必须为小数，但输入的是 <soft_red>%input%</soft_red>。</gray>
+    NumberNotInteger: <gray><soft_red>%name%</soft_red> 参数必须为整数，但输入的是 <soft_red>%input%</soft_red>。</gray>
+    NumberAboveMax: <gray><soft_red>%name%</soft_red> 参数不能大于 <soft_red>%value%</soft_red>，但输入的是 <soft_red>%input%</soft_red>。</gray>
+    NumberBelowMin: <gray><soft_red>%name%</soft_red> 参数不能小于 <soft_red>%value%</soft_red>，但输入的是 <soft_red>%input%</soft_red>。</gray>
+    InvalidWorld: <gray><soft_red>%input%</soft_red> 不是有效的世界！</gray>
+    InvalidItem: <gray><soft_red>%input%</soft_red> 不是有效的物品！</gray>
+    InvalidBlock: <gray><soft_red>%input%</soft_red> 不是有效的方块！</gray>
+    InvalidEnchantment: <gray><soft_red>%input%</soft_red> 不是有效的附魔！</gray>
+  Execution:
+    PlayerOnly: <soft_red>该命令只能由玩家执行。</soft_red>
+    NotYourself: <soft_red>该命令不能对自己使用。</soft_red>
+    MissingArguments:
+    - '[prefix="false"]'
+    - ' '
+    - '<red>错误：</red><c:#D9D9D9><shadow:#5D5D5D:1.0>缺少必填参数！</shadow></c>'
+    - '<red>用法：</red><c:#FCC549><shadow:#B45115:1.0>/%command%</shadow></c>'
+    - ' '
+HelpPage:
+  General:
+  - '[prefix="false"]'
+  - <c:#FCE491><shadow:#C5741A:1.0><st>                                                            </st></shadow></c>
+  - <c:#FCC549><shadow:#B45115:1.0>  <b>%name% 命令</b></shadow></c>
+  - ' '
+  - '%entry%'
+  - <c:#FCE491><shadow:#C5741A:1.0><st>                                                            </st></shadow></c>
+  Entry: <c:#FCC549><shadow:#B45115:1.0>  • /%command%</shadow></c> <c:#D9D9D9><shadow:#5D5D5D:1.0>- %description%</shadow></c>
+Plugin:
+  Reloaded: <gray>插件已<green>重载</green>！</gray>
+EconomyBridge:
+  FromItem:
+    Nothing: <red>你必须手持一个物品！</red>
+    Exists: <red>已存在同名货币！</red>
+    Created: <gray>已根据手持物品创建货币 <yellow>%currency_name%</yellow>，ID 为 <yellow>%currency_id%</yellow>。</gray>
+Error:
+  NoPermission: <soft_red>你没有权限执行该操作！</soft_red>
+  InvalidPlayer: <soft_red>找不到该玩家！</soft_red>
+Time:
+  Label:
+    Day: '%s天'
+    Hour: '%s小时'
+    Minute: '%s分钟'
+    Second: '%s秒'
+  Delimiter: ' '
+States:
+  EnabledDisabled:
+    onTrue: <green>已启用</green>
+    onFalse: <red>已禁用</red>
+  YesNo:
+    onTrue: <green>是</green>
+    onFalse: <red>否</red>
+  OnOff:
+    onTrue: <green>开启</green>
+    onFalse: <red>关闭</red>
+Entry:
+  Valid: <green>✔</green> <gray>%s</gray>
+  Invalid: <red>✘</red> <gray>%s</gray>
+Other:
+  Any: 任意
+  None: 无
+  Never: 从不
+  OneTimed: 单次
+  Unlimited: 不限次数
+  Infinity: ∞
+MenuItem:
+  Exit:
+    Name: <red><b>关闭</b></red>
+    Lore: []
+  Back:
+    Name: <soft_yellow><b>返回</b></soft_yellow>
+    Lore: []
+  NextPage:
+    Name: <white><b><u>下一页</u> →</b></white>
+    Lore: []
+  PreviousPage:
+    Name: <white><b>← <u>上一页</u></b></white>
+    Lore: []
+Dialog:
+  Info:
+    Exit:
+    - '[prefix="false"]'
+    - ''
+    - '<gray>点击 <click:run_command:"/#exit"><hover:show_text:"<gray>点击取消输入。</gray>"><green>[这里]</green></hover></click> 退出输入模式。</gray>'
+    - ''
+  Button:
+    OK:
+      Label: <green>✔</green> 确定
+      Width: 150
+    Cancel:
+      Label: <red>✘</red> 取消
+      Width: 150
+    Apply:
+      Label: <green>✔</green> 应用
+      Width: 150
+    Confirm:
+      Label: <green>✔</green> 确认
+      Width: 150
+    Reset:
+      Label: <red>✘</red> 重置
+      Width: 150
+    Back:
+      Label: <soft_yellow>←</soft_yellow> 返回
+      Width: 150
+Editor:
+  Action:
+    Exit:
+    - '[prefix="false"]'
+    - ''
+    - '<gray>点击 <click:run_command:"/#exit"><hover:show_text:"<gray>点击取消输入。</gray>"><green>[这里]</green></hover></click> 退出输入模式。</gray>'
+    - ''
+  Input:
+    Header:
+      Main: <green><b>输入模式</b></green>
+      Error: <red><b>错误</b></red>
+    Error:
+      NotInteger: <gray>请输入<red>整数</red>！</gray>
+      Generic: <gray>输入内容无效！</gray>

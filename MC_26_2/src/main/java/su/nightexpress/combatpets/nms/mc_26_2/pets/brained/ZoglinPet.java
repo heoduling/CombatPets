@@ -11,5 +11,6 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class ZoglinPet extends Zoglin implements PetEntity {
     public ZoglinPet(@NotNull ServerLevel level) { super(EntityTypes.get("zoglin"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Zoglin> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Zoglin> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
 }

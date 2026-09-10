@@ -45,7 +45,7 @@ public class CommandArguments {
         return Commands.argument(CommandArguments.TYPE, (context, string) -> Optional.ofNullable(plugin.getPetManager().getFoodCategory(string))
                 .orElseThrow(() -> CommandSyntaxException.custom(Lang.ERROR_COMMAND_INVALID_FOOD_CATEGORY_ARGUMENT))
             )
-            .localized(CoreLang.COMMAND_ARGUMENT_NAME_TYPE)
+            .localized(Lang.COMMAND_ARGUMENT_NAME_TYPE)
             .suggestions((reader, context) -> plugin.getPetManager().getFoodCategoryNames());
     }
 }

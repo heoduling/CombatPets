@@ -12,8 +12,9 @@ public class Keys {
     public static NamespacedKey eggTierId;
 
     public static NamespacedKey captureItem;
-    public static NamespacedKey captureEscaped;
     public static NamespacedKey captureProgress;
+
+    public static NamespacedKey petEntity;
 
     public static NamespacedKey accessoryType;
     public static NamespacedKey accessoryValue;
@@ -30,8 +31,9 @@ public class Keys {
         eggTierId = new NamespacedKey(plugin, "item.tier_id");
 
         captureItem = new NamespacedKey(plugin, "capture.item");
-        captureEscaped = new NamespacedKey(plugin, "capture.escaped");
         captureProgress = new NamespacedKey(plugin, "capture.progress");
+
+        petEntity = new NamespacedKey(plugin, "pet.entity");
 
         accessoryType = new NamespacedKey(plugin, "customization.type");
         accessoryValue = new NamespacedKey(plugin, "customization.value");

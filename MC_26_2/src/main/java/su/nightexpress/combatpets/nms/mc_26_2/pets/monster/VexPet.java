@@ -79,7 +79,7 @@ public class VexPet extends Vex implements PetEntity {
                 setTarget(null);
             }
 
-            if (!VexPet.this.getMoveControl().hasWanted() && VexPet.this.random.nextInt(7) == 0) {
+            if (!VexPet.this.getMoveControl().hasWanted() && VexPet.this.getRandom().nextInt(7) == 0) {
                 return true;
             }
             return false;
@@ -92,12 +92,16 @@ public class VexPet extends Vex implements PetEntity {
 
         @Override
         public void tick() {
-            Player p = getHolder().getOwner();
+            net.minecraft.server.level.ServerPlayer owner = PetAI.getLocalOwner(getHolder());
+            if (owner == null) {
+                getHolder().moveToOwner();
+                return;
+            }
             double speed = VexPet.this.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
             double range = 4;
-            double d0 = p.getLocation().getX() - range / 2;
-            double d1 = p.getLocation().getY() + range / 2;
-            double d2 = p.getLocation().getZ() - range / 2;
+            double d0 = owner.getX() - range / 2;
+            double d1 = owner.getY() + range / 2;
+            double d2 = owner.getZ() - range / 2;
 
             VexPet.this.getMoveControl().setWantedPosition(d0, d1, d2, 1D);
         }

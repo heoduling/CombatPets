@@ -12,6 +12,7 @@ import su.nightexpress.combatpets.config.Lang;
 import su.nightexpress.combatpets.config.Perms;
 import su.nightexpress.combatpets.data.impl.PetData;
 import su.nightexpress.combatpets.data.impl.PetUser;
+import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.commands.Arguments;
 import su.nightexpress.nightcore.commands.Commands;
 import su.nightexpress.nightcore.commands.builder.HubNodeBuilder;
@@ -51,7 +52,7 @@ public class LevelingCommands {
             .withArguments(
                 CommandArguments.tierArgument(plugin),
                 CommandArguments.templateArgument(plugin),
-                Arguments.playerName(CommandArguments.PLAYER).optional()
+                Arguments.playerName(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER).optional()
             )
             .executes((context, arguments) -> resetLeveling(plugin, context, arguments))
         );
@@ -80,11 +81,11 @@ public class LevelingCommands {
             .permission(permission)
             .withArguments(
                 Arguments.integer(CommandArguments.AMOUNT)
-                    .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT)
+                    .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
                     .suggestions((reader, context) -> Lists.newList("1", "10", "100")),
                 CommandArguments.tierArgument(plugin),
                 CommandArguments.templateArgument(plugin),
-                Arguments.playerName(CommandArguments.PLAYER).optional()
+                Arguments.playerName(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER).optional()
             )
             .executes((context, arguments) -> changeXP(plugin, context, arguments, mode));
     }
@@ -98,9 +99,9 @@ public class LevelingCommands {
             .permission(permission)
             .withArguments(
                 Arguments.integer(CommandArguments.AMOUNT)
-                    .localized(CoreLang.COMMAND_ARGUMENT_NAME_AMOUNT)
+                    .localized(Lang.COMMAND_ARGUMENT_NAME_AMOUNT)
                     .suggestions((reader, context) -> Lists.newList("1", "10", "100")),
-                Arguments.player(CommandArguments.PLAYER).optional()
+                Arguments.player(CommandArguments.PLAYER).localized(Lang.COMMAND_ARGUMENT_NAME_PLAYER).optional()
             )
             .executes((context, arguments) -> rewardXP(plugin, context, arguments, mode));
     }
@@ -125,10 +126,11 @@ public class LevelingCommands {
             }
 
             Player player = user.getPlayer();
-            ActivePet activePet = player == null ? null : plugin.getPetManager().getPlayerPet(player);
-            if (activePet != null && (activePet.getTier() != tier || activePet.getTemplate() != template)) {
-                activePet = null;
+            ActivePet selectedPet = player == null ? null : plugin.getPetManager().getPlayerPet(player);
+            if (selectedPet != null && (selectedPet.getTier() != tier || selectedPet.getTemplate() != template)) {
+                selectedPet = null;
             }
+            final ActivePet activePet = selectedPet;
 //            if (activePet != null && activePet.getTier() == tier && activePet.getTemplate() == template) {
 //                activePet.addXP(amount);
 //            }
@@ -141,19 +143,31 @@ public class LevelingCommands {
             switch (mode) {
                 case ADD -> {
                     message = Lang.COMMAND_XP_ADD_DONE;
-                    if (activePet != null) activePet.addXP(amount); else data.addXP(amount);
+                    if (activePet != null) PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                        activePet.addXP(amount);
+                        plugin.getUserManager().save(user);
+                    });
+                    else data.addXP(amount);
                 }
                 case SET -> {
                     message = Lang.COMMAND_XP_SET_DONE;
-                    if (activePet != null) activePet.setXP(amount); else data.setXP(amount);
+                    if (activePet != null) PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                        activePet.setXP(amount);
+                        plugin.getUserManager().save(user);
+                    });
+                    else data.setXP(amount);
                 }
                 case REMOVE -> {
                     message = Lang.COMMAND_XP_REMOVE_DONE;
-                    if (activePet != null) activePet.removeXP(amount); else data.removeXP(amount);
+                    if (activePet != null) PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                        activePet.removeXP(amount);
+                        plugin.getUserManager().save(user);
+                    });
+                    else data.removeXP(amount);
                 }
             }
 
-            plugin.getUserManager().save(user);
+            if (activePet == null) plugin.getUserManager().save(user);
 
             message.message().send(context.getSender(), replacer -> replacer
                 .replace(Placeholders.PLAYER_NAME, user.getName())
@@ -189,14 +203,18 @@ public class LevelingCommands {
         MessageLocale message;
         if (mode == Mode.ADD) {
             message = Lang.COMMAND_XP_REWARD_DONE;
-            activePet.addXP(amount);
+            PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                activePet.addXP(amount);
+                plugin.getUserManager().save(user);
+            });
         }
         else {
             message = Lang.COMMAND_XP_PENALTY_DONE;
-            activePet.removeXP(amount);
+            PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                activePet.removeXP(amount);
+                plugin.getUserManager().save(user);
+            });
         }
-
-        plugin.getUserManager().save(user);
 
         message.message().send(context.getSender(), replacer -> replacer
             .replace(Placeholders.forPlayer(player))
@@ -227,11 +245,15 @@ public class LevelingCommands {
             Player player = user.getPlayer();
             ActivePet activePet = player == null ? null : plugin.getPetManager().getPlayerPet(player);
             if (activePet != null && activePet.getTier() == tier && activePet.getTemplate() == template) {
-                activePet.resetLeveling();
+                PetScheduler.runAtEntity(plugin, activePet.getEntity(), () -> {
+                    activePet.resetLeveling();
+                    plugin.getUserManager().save(user);
+                });
             }
-            else data.resetXP();
-
-            plugin.getUserManager().save(user);
+            else {
+                data.resetXP();
+                plugin.getUserManager().save(user);
+            }
 
             Lang.COMMAND_RESET_PROGRESS_DONE.message().send(context.getSender(), replacer -> replacer
                 .replace(Placeholders.PLAYER_NAME, user.getName())

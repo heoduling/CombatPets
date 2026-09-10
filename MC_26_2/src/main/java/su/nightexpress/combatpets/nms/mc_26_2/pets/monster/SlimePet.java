@@ -7,7 +7,6 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.player.Player;
@@ -15,12 +14,12 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.api.pet.PetEntity;
 import su.nightexpress.combatpets.nms.mc_26_2.brain.PetAI;
+import su.nightexpress.combatpets.nms.mc_26_2.goals.combat.CubePetFollowTargetGoal;
 import su.nightexpress.combatpets.nms.mc_26_2.goals.combat.PetAutoTargetGoal;
 import su.nightexpress.combatpets.nms.mc_26_2.goals.follow.PetFollowOwnerGoal;
+import su.nightexpress.combatpets.nms.mc_26_2.goals.follow.CubePetMovementDriver;
 
-import java.util.EnumSet;
-
-public class SlimePet extends Slime implements PetEntity {
+public class SlimePet extends Slime implements PetEntity, CubePetMovementDriver {
 
     public SlimePet(@NotNull ServerLevel world) {
         super(EntityTypes.get("slime"), world);
@@ -31,7 +30,7 @@ public class SlimePet extends Slime implements PetEntity {
         this.targetSelector.addGoal(1, new PetAutoTargetGoal(this));
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(2, new PetFollowOwnerGoal(this));
-        this.goalSelector.addGoal(2, new SlimeFollowTargetGoal(this));
+        this.goalSelector.addGoal(2, new CubePetFollowTargetGoal(this));
     }
 
     @Override
@@ -47,6 +46,11 @@ public class SlimePet extends Slime implements PetEntity {
     @Override
     protected int getJumpDelay() {
         return 15;
+    }
+
+    @Override
+    protected int getSplitCount() {
+        return 0;
     }
 
     @Override
@@ -74,40 +78,10 @@ public class SlimePet extends Slime implements PetEntity {
         return true;
     }
 
-    public static class SlimeFollowTargetGoal extends Goal {
-
-        private final Slime slime;
-
-        public SlimeFollowTargetGoal(Slime entityslime) {
-            this.slime = entityslime;
-            this.setFlags(EnumSet.of(Flag.LOOK));
-        }
-
-        @Override
-        public boolean canUse() {
-            LivingEntity entityliving = this.slime.getTarget();
-            return entityliving != null && entityliving.isAlive();
-        }
-
-        @Override
-        public boolean canContinueToUse() {
-            LivingEntity entityliving = this.slime.getTarget();
-            return entityliving != null && entityliving.isAlive();
-        }
-
-        @Override
-        public boolean requiresUpdateEveryTick() {
-            return true;
-        }
-
-        @Override
-        public void tick() {
-            LivingEntity target = this.slime.getTarget();
-            if (target == null) return;
-
-            this.slime.lookAt(target, 10.0F, 10.0F);
-
-            slime.getMoveControl().setWantedPosition(target.getX(), target.getY(), target.getZ(), 1);
-        }
+    @Override
+    public void driveCube(float direction, double speedModifier) {
+        CubeMobMoveControl<?> moveControl = (CubeMobMoveControl<?>) this.getMoveControl();
+        moveControl.setDirection(direction, true);
+        moveControl.setWantedMovement(speedModifier);
     }
 }

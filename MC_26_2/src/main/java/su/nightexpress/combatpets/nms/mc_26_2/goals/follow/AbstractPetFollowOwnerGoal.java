@@ -5,10 +5,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.cubemob.Slime;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.api.pet.PetEntity;
+import su.nightexpress.combatpets.nms.mc_26_2.brain.PetAI;
 import su.nightexpress.nightcore.util.random.Rnd;
 
 import java.util.EnumSet;
@@ -22,7 +22,6 @@ public abstract class AbstractPetFollowOwnerGoal extends Goal {
     public AbstractPetFollowOwnerGoal(@NotNull Mob pet) {
         this.pet = pet;
         this.petHolder = ((PetEntity) pet).getHolder();
-        this.owner = ((CraftPlayer) this.petHolder.getOwner()).getHandle();
         this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
@@ -42,7 +41,7 @@ public abstract class AbstractPetFollowOwnerGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (this.isTargettedToEnemy() || this.owner == null || !this.owner.isAlive()) return false;
+        if (!this.refreshOwner() || this.isTargettedToEnemy() || !this.owner.isAlive()) return false;
 
         if (this.pet.passengers.contains(this.owner)) {
             return false;
@@ -61,6 +60,14 @@ public abstract class AbstractPetFollowOwnerGoal extends Goal {
 
     public void moveToOwner() {
         this.pet.setTarget(null);
-        this.pet.getBukkitEntity().teleportAsync(this.owner.getBukkitEntity().getLocation());
+        this.petHolder.moveToOwner();
+    }
+
+    protected boolean refreshOwner() {
+        this.owner = PetAI.getLocalOwner(this.petHolder);
+        if (this.owner != null) return true;
+
+        this.moveToOwner();
+        return false;
     }
 }

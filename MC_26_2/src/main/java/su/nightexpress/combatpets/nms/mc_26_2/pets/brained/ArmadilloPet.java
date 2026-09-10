@@ -11,5 +11,6 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class ArmadilloPet extends Armadillo implements PetEntity {
     public ArmadilloPet(@NotNull ServerLevel level) { super(EntityTypes.get("armadillo"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Armadillo> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Armadillo> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
 }

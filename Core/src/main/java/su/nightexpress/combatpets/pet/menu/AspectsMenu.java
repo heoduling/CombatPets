@@ -12,6 +12,7 @@ import su.nightexpress.combatpets.api.pet.PetEntityBridge;
 import su.nightexpress.combatpets.config.Config;
 import su.nightexpress.combatpets.config.Lang;
 import su.nightexpress.combatpets.pet.AttributeRegistry;
+import su.nightexpress.combatpets.pet.impl.PetTier;
 import su.nightexpress.combatpets.util.PetUtils;
 import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.nightcore.config.ConfigValue;
@@ -127,7 +128,9 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
                         Stat attribute = AttributeRegistry.getById(name);
                         if (attribute == null) continue;
 
-                        double perAspect = petHolder.getTemplate().getAttributePerAspect(attribute);
+                        double perAspect = petHolder.getTier() instanceof PetTier petTier
+                            ? petTier.getAttributePerAspect(petHolder.getTemplate(), attribute)
+                            : petHolder.getTemplate().getAttributePerAspect(attribute);
                         if (perAspect == 0D) continue;
 
                         double total = petHolder.getStoredAttribute(attribute);
@@ -178,7 +181,7 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Pet Aspects"), MenuSize.CHEST_45);
+        return Config.createMenuOptions(BLACK.enclose("宠物属性"), MenuSize.CHEST_45);
     }
 
     @Override
@@ -188,12 +191,12 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
 
         ItemStack reallocate = ItemUtil.getSkinHead("5b1ef2a4829a11fd903b5e31088662a8c56e471bb48643c0d9f95006d1820210");
         ItemUtil.editMeta(reallocate, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Reallocate Points")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("重置属性点")));
             meta.setLore(Lists.newList(
-                LIGHT_GRAY.enclose("Resets all aspect values to 0"),
-                LIGHT_GRAY.enclose("and returns aspect points."),
+                LIGHT_GRAY.enclose("将全部属性值重置为 0，"),
+                LIGHT_GRAY.enclose("并返还已经分配的属性点。"),
                 "",
-                LIGHT_GRAY.enclose(LIGHT_YELLOW.enclose("[▶]") + " Click to " + LIGHT_YELLOW.enclose("reallocate") + ".")
+                LIGHT_GRAY.enclose(LIGHT_YELLOW.enclose("[▶]") + " 点击" + LIGHT_YELLOW.enclose("重置") + "。")
             ));
         });
         list.add(new MenuItem(reallocate).setSlots(4).setPriority(10).setHandler(this.reallocateHandler));
@@ -201,19 +204,19 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
 
         ItemStack backItem = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
         ItemUtil.editMeta(backItem, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_BACK.getName());
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("返回")));
         });
         list.add(new MenuItem(backItem).setSlots(40).setPriority(10).setHandler(this.returnHandler));
 
         ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_PREVIOUS_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("← 上一页")));
         });
         list.add(new MenuItem(prevPage).setSlots(36).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
         ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_NEXT_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("下一页 →")));
         });
         list.add(new MenuItem(nextPage).setSlots(44).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
@@ -227,10 +230,10 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
         ).read(cfg);
 
         this.aspectLore = ConfigValue.create("Aspect.Lore", Lists.newList(
-            DARK_GRAY.enclose("1 Point"),
+            DARK_GRAY.enclose("1 属性点"),
             "",
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Current: ") + GENERIC_VALUE + LIGHT_GRAY.enclose("/") + GENERIC_MAX),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Balance: ") + PET_ASPECT_POINTS + " Points"),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("当前：") + GENERIC_VALUE + LIGHT_GRAY.enclose("/") + GENERIC_MAX),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("可用：") + PET_ASPECT_POINTS + " 属性点"),
             "",
             ATTRIBUTES,
             "",
@@ -238,20 +241,20 @@ public class AspectsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<As
         )).read(cfg);
 
         this.aspectAttributes = ConfigValue.create("Aspect.Attributes", Lists.newList(
-            LIGHT_YELLOW.enclose(BOLD.enclose("Affected Attributes:")),
+            LIGHT_YELLOW.enclose(BOLD.enclose("受影响的属性：")),
             LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose(GENERIC_NAME + ":") + " +" + GENERIC_VALUE + " " + LIGHT_GRAY.enclose("(" + WHITE.enclose(GENERIC_TOTAL) + ")"))
         )).read(cfg);
 
         this.aspectActionUpgrade = ConfigValue.create("Aspect.Action.Upgrade", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_YELLOW.enclose("[▶]") + " Click to " + LIGHT_YELLOW.enclose("upgrade") + ".")
+            LIGHT_GRAY.enclose(LIGHT_YELLOW.enclose("[▶]") + " 点击" + LIGHT_YELLOW.enclose("升级") + "。")
         )).read(cfg);
 
         this.aspectActionNoPoints = ConfigValue.create("Aspect.Action.NoPoints", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_RED.enclose("✘") + " You don't have " + LIGHT_RED.enclose("aspect points") + ".")
+            LIGHT_GRAY.enclose(LIGHT_RED.enclose("✘") + " 你没有可用的" + LIGHT_RED.enclose("属性点") + "。")
         )).read(cfg);
 
         this.aspectActionMaxLevel = ConfigValue.create("Aspect.Action.MaxValue", Lists.newList(
-            LIGHT_GRAY.enclose(LIGHT_RED.enclose("[❗]") + " Aspect is at max. value.")
+            LIGHT_GRAY.enclose(LIGHT_RED.enclose("[❗]") + " 该属性已达到上限。")
         )).read(cfg);
 
         this.aspectSlots = ConfigValue.create("Aspect.Slots", new int[]{19, 21, 23, 25}).read(cfg);

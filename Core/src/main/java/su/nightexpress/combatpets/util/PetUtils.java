@@ -31,6 +31,15 @@ public class PetUtils {
 
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.BODY};
 
+    /**
+     * A witch temporarily replaces its main hand with a potion while drinking.
+     * That vanilla animation item is not pet equipment and must never be saved
+     * or handed to a player by the equipment menu.
+     */
+    public static boolean isTransientEquipment(@NotNull LivingEntity entity, @NotNull EquipmentSlot slot) {
+        return slot == EquipmentSlot.HAND && entity instanceof Witch witch && witch.isDrinkingPotion();
+    }
+
     @Nullable
     public static String extractBase64TextureURL(@NotNull String headTexture) {
         try {
@@ -75,7 +84,7 @@ public class PetUtils {
     }
 
     @NotNull
-    public static ItemStack getRawMysteryEgg(@NotNull Template template) {
+    public static ItemStack getRawMysteryEgg() {
         return new ItemStack(Config.ITEM_MYSTERY_EGG.get());
     }
 
@@ -133,7 +142,7 @@ public class PetUtils {
         EntityType type = petData.getTemplate().getEntityType();
 
         if (type == EntityType.SKELETON || type == EntityType.STRAY || type == EntityType.ILLUSIONER ||
-            (Version.isAtLeast(Version.MC_1_21) && type.name().equalsIgnoreCase("bogged"))) {
+            (Version.isAtLeast(Version.MC_1_21) && (type.name().equalsIgnoreCase("bogged") || type.name().equalsIgnoreCase("parched")))) {
             petData.setEquipment(EquipmentSlot.HAND, new ItemStack(Material.BOW));
         }
         else if (type == EntityType.WITHER_SKELETON) {

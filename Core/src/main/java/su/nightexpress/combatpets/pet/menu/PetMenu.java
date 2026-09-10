@@ -84,6 +84,7 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
                 if (equipment == null) return;
 
                 for (EquipmentSlot slot : EquipmentSlot.values()) {
+                    if (PetUtils.isTransientEquipment(entity, slot)) continue;
                     ItemStack wear = equipment.getItem(slot);
                     if (wear.getType().isAir()) continue;
 
@@ -175,7 +176,7 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Pet Menu"), MenuSize.CHEST_45);
+        return Config.createMenuOptions(BLACK.enclose("宠物菜单"), MenuSize.CHEST_45);
     }
 
     @Override
@@ -185,20 +186,20 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
 
         ItemStack statsItem = ItemUtil.getSkinHead("15b52a5ba47b487a4ea723ccf404b33ac9ed80428c626c099ebee4bb7e6f6363");
         ItemUtil.editMeta(statsItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("STATS")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("宠物状态")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Level: ") + PET_LEVEL),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("XP: ") + PET_XP + LIGHT_GRAY.enclose("/") + PET_REQUIRED_XP),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Saturation: ") + PET_SATURATION + LIGHT_GRAY.enclose("/") + PET_MAX_SATURATION),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Food: ") + PET_FOOD),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("等级：") + PET_LEVEL),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("经验：") + PET_XP + LIGHT_GRAY.enclose("/") + PET_REQUIRED_XP),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("饱食度：") + PET_SATURATION + LIGHT_GRAY.enclose("/") + PET_MAX_SATURATION),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("食物：") + PET_FOOD),
                 "",
-                LIGHT_YELLOW.enclose(BOLD.enclose("ATTRIBUTES")),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Damage: ") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_DAMAGE)),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Attack Speed: ") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_SPEED) + LIGHT_GRAY.enclose("/ sec.")),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Health: ") + PET_ATTRIBUTE.apply(AttributeRegistry.MAX_HEALTH)),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Regen: ") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_FORCE) + LIGHT_GRAY.enclose(" x ") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_SPEED) + LIGHT_GRAY.enclose(" / sec.")),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Defense: ") + PET_ATTRIBUTE.apply(AttributeRegistry.ARMOR)),
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Speed: W: ") + PET_ATTRIBUTE.apply(AttributeRegistry.MOVEMENT_SPEED) + LIGHT_GRAY.enclose(" / F: ") + PET_ATTRIBUTE.apply(AttributeRegistry.FLYING_SPEED))
+                LIGHT_YELLOW.enclose(BOLD.enclose("属性")),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("伤害：") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_DAMAGE)),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("攻击速度：") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_SPEED) + LIGHT_GRAY.enclose("/秒")),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("生命值：") + PET_ATTRIBUTE.apply(AttributeRegistry.MAX_HEALTH)),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("生命恢复：") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_FORCE) + LIGHT_GRAY.enclose(" x ") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_SPEED) + LIGHT_GRAY.enclose("/秒")),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("防御：") + PET_ATTRIBUTE.apply(AttributeRegistry.ARMOR)),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("速度：地面 ") + PET_ATTRIBUTE.apply(AttributeRegistry.MOVEMENT_SPEED) + LIGHT_GRAY.enclose(" / 飞行 ") + PET_ATTRIBUTE.apply(AttributeRegistry.FLYING_SPEED))
 //                "",
 //                LIGHT_YELLOW.enclose(BOLD.enclose("ASPECTS")),
 //                LIGHT_YELLOW.enclose("▪ #ddeceeStrength: %pet_aspect_strength%"),
@@ -211,22 +212,22 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
 
         ItemStack despawnItem = ItemUtil.getSkinHead("15f1adb58db6e2e54a84739b2c79ddd4014b85f76511df41a9278d7151f6cdbf");
         ItemUtil.editMeta(despawnItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Return to Collection")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("收回宠物")));
             meta.setLore(Lists.newList(
-                LIGHT_GRAY.enclose("Return pet to your collection.")
+                LIGHT_GRAY.enclose("将宠物收回收藏。")
             ));
         });
         list.add(new MenuItem(despawnItem).setPriority(10).setSlots(40).setHandler(this.despawnHandler));
 
         ItemStack silentItem = ItemUtil.getSkinHead("5159ea5fbc4e98a9b603854bbd4f1b07aefcd4df051b3fa6158bbf959be44413");
         ItemUtil.editMeta(silentItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Silent Mode")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("静音模式")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Status: ") + PET_SILENT),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("状态：") + PET_SILENT),
                 "",
-                LIGHT_GRAY.enclose("Disables pet ambient sounds."),
+                LIGHT_GRAY.enclose("关闭宠物的环境音效。"),
                 "",
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to " + LIGHT_YELLOW.enclose("toggle") + ".")
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("点击" + LIGHT_YELLOW.enclose("切换") + "。")
             ));
         });
         list.add(new MenuItem(silentItem).setPriority(10).setSlots(19).setHandler(this.silentHandler));
@@ -242,73 +243,76 @@ public class PetMenu extends ConfigMenu<PetsPlugin> {
 
         ItemStack combatItem = ItemUtil.getSkinHead("509dedccbde876c98bc002bfeedb8a8ad4640128f45e479dd7287d9f80663075");
         ItemUtil.editMeta(combatItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Combat Mode")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("战斗模式")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Current: ") + PET_COMBAT_MODE),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("当前：") + PET_COMBAT_MODE),
                 "",
-                LIGHT_YELLOW.enclose(BOLD.enclose("Passive: ")) + LIGHT_GRAY.enclose("Never attacks."),
+                LIGHT_YELLOW.enclose(BOLD.enclose("被动：")) + LIGHT_GRAY.enclose("不会主动攻击。"),
                 "",
-                LIGHT_YELLOW.enclose(BOLD.enclose("Protective: ")) + LIGHT_GRAY.enclose("Defends owner when attacked."),
+                LIGHT_YELLOW.enclose(BOLD.enclose("防御：")) + LIGHT_GRAY.enclose("主人受攻击时反击。"),
                 "",
-                LIGHT_YELLOW.enclose(BOLD.enclose("Supportive: ")) + LIGHT_GRAY.enclose("Supports owner's attacks."),
+                LIGHT_YELLOW.enclose(BOLD.enclose("支援：")) + LIGHT_GRAY.enclose("协助主人攻击目标。"),
                 "",
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to " + LIGHT_YELLOW.enclose("toggle") + ".")
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("点击" + LIGHT_YELLOW.enclose("切换") + "。")
             ));
         });
         list.add(new MenuItem(combatItem).setPriority(10).setSlots(23).setHandler(this.combatModeHandler));
 
         ItemStack renameItem = ItemUtil.getSkinHead("8ff88b122ff92513c6a27b7f67cb3fea97439e078821d6861b74332a2396");
         ItemUtil.editMeta(renameItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Rename")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("重命名")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Current: ") + PET_NAME),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("当前名称：") + PET_NAME),
                 "",
-                LIGHT_GRAY.enclose("Give new name to your pet."),
+                LIGHT_GRAY.enclose("为你的宠物设置新名称。"),
                 "",
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to " + LIGHT_YELLOW.enclose("rename") + ".")
+                LIGHT_GRAY.enclose("请使用文明、友善的名称。"),
+                LIGHT_GRAY.enclose("若名称不符合服务器规范，管理人员可能"),
+                LIGHT_GRAY.enclose("协助调整名称，必要时移除相关宠物。"),
+                "",
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("点击" + LIGHT_YELLOW.enclose("重命名") + "。")
             ));
         });
         list.add(new MenuItem(renameItem).setPriority(10).setSlots(21).setHandler(this.renameHandler));
 
         ItemStack aspectsItem = ItemUtil.getSkinHead("b62651879d870499da50e34036800ddffd52f3e4e1993c5fc0fc825d03446d8b");
         ItemUtil.editMeta(aspectsItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Aspects")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("属性加点")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Aspect Points: ") + PET_ASPECT_POINTS),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("可用属性点：") + PET_ASPECT_POINTS),
                 "",
-                LIGHT_GRAY.enclose("Improve your pet by " + LIGHT_YELLOW.enclose("upgrading")),
-                LIGHT_GRAY.enclose("certain its aspects!"),
+                LIGHT_GRAY.enclose("分配属性点来" + LIGHT_YELLOW.enclose("强化")),
+                LIGHT_GRAY.enclose("你的宠物。"),
                 "",
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to " + LIGHT_YELLOW.enclose("open") + ".")
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("点击" + LIGHT_YELLOW.enclose("打开") + "。")
             ));
         });
         list.add(new MenuItem(aspectsItem).setPriority(10).setSlots(25).setHandler(this.aspectsHandler));
 
         ItemStack equipItem = ItemUtil.getSkinHead("d1d2b7dd66ffd86ad4709927b175e83f1a9e10fbc864b2390403708f39d8efd8");
         ItemUtil.editMeta(equipItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Equipment")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("装备")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Unlocked: ") + PET_EQUIPMENT_UNLOCKED),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("允许装备：") + PET_EQUIPMENT_UNLOCKED),
                 "",
-                LIGHT_GRAY.enclose("When " + LIGHT_YELLOW.enclose("unlocked") + ", right-click the pet"),
-                LIGHT_GRAY.enclose("with item in hand to equip it."),
+                LIGHT_GRAY.enclose("启用后，手持物品右键宠物"),
+                LIGHT_GRAY.enclose("即可为它穿戴装备。"),
                 "",
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Left-Click to " + LIGHT_YELLOW.enclose("toggle") + "."),
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Right-Click to " + LIGHT_YELLOW.enclose("unequip all") + ".")
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("左键点击" + LIGHT_YELLOW.enclose("启用或禁用") + "。"),
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("右键点击" + LIGHT_YELLOW.enclose("卸下全部装备") + "。")
             ));
         });
         list.add(new MenuItem(equipItem).setPriority(10).setSlots(2).setHandler(this.equipmentHandler));
 
         ItemStack inventoryItem = ItemUtil.getSkinHead("c390eede381bb8447f7d72e15b56347683e02c17c9b8fc6becd726f0a52c7fc1");
         ItemUtil.editMeta(inventoryItem, meta -> {
-            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("Inventory")));
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("宠物背包")));
             meta.setLore(Lists.newList(
-                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Storage: ") + PET_INVENTORY_FILLED + LIGHT_GRAY.enclose("/") + TIER_INVENTORY_SIZE),
+                LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("已用空间：") + PET_INVENTORY_FILLED + LIGHT_GRAY.enclose("/") + TIER_INVENTORY_SIZE),
                 "",
-                LIGHT_GRAY.enclose("You're making me carry"),
-                LIGHT_GRAY.enclose("the heavy stuff, aren't you?"),
+                LIGHT_GRAY.enclose("让宠物替你携带物品。"),
                 "",
-                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to " + LIGHT_YELLOW.enclose("open") + ".")
+                LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("点击" + LIGHT_YELLOW.enclose("打开") + "。")
             ));
         });
         list.add(new MenuItem(inventoryItem).setPriority(10).setSlots(6).setHandler(this.inventoryHandler));

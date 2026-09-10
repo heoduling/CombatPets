@@ -11,5 +11,6 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class FrogPet extends Frog implements PetEntity {
     public FrogPet(@NotNull ServerLevel level) { super(EntityTypes.get("frog"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Frog> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Frog> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
 }

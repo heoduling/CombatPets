@@ -5,6 +5,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.Placeholders;
 import su.nightexpress.combatpets.api.pet.Aspect;
+import su.nightexpress.combatpets.util.PetCreator;
 import su.nightexpress.nightcore.config.ConfigValue;
 import su.nightexpress.nightcore.config.FileConfig;
 import su.nightexpress.nightcore.util.StringUtil;
@@ -32,16 +33,16 @@ public class PetAspect implements Aspect {
 
     @NotNull
     public static PetAspect read(@NotNull FileConfig config, @NotNull String path, @NotNull String id) {
-        String name = config.getString(path + ".Name", StringUtil.capitalizeUnderscored(id));
+        String name = config.getString(path + ".Name", PetCreator.getAspectName(id));
 
         ItemStack icon = ConfigValue.create(path + ".Icon", new ItemStack(Material.LIME_DYE),
-            "Sets aspect icon.",
+            "属性的显示图标。",
             Placeholders.WIKI_ITEMS_URL
         ).read(config);
 
         Set<String> attributes = ConfigValue.create(path + ".Attached_Attributes",
                 new HashSet<>(),
-            "Sets pet's attributes affected by this aspect.",
+            "该属性点会影响的宠物属性。",
             Placeholders.WIKI_ATTRIBUTES_URL,
             Placeholders.WIKI_ASPECTS_URL
         ).onRead(set -> set.stream().map(String::toLowerCase).collect(Collectors.toSet())).read(config);

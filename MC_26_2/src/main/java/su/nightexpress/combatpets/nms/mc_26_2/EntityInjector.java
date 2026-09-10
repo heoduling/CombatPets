@@ -24,6 +24,7 @@ public class EntityInjector {
         addCreator(EntityType.ALLAY, AllayPet::new);
         addCreator(EntityType.AXOLOTL, AxolotlPet::new);
         addCreator(EntityType.ARMADILLO, ArmadilloPet::new);
+        addCreator(EntityType.BAT, BatPet::new);
         addCreator(EntityType.BREEZE, BreezePet::new);
         addCreator(EntityType.FROG, FrogPet::new);
         addCreator(EntityType.GOAT, GoatPet::new);
@@ -34,6 +35,11 @@ public class EntityInjector {
         addCreator(EntityType.ZOGLIN, ZoglinPet::new);
         addCreator(EntityType.WARDEN, WardenPet::new);
         addCreator(EntityType.CREAKING, CreakingPet::new);
+        addCreator(EntityType.CAMEL, CamelPet::new);
+        addCreator(EntityType.CAMEL_HUSK, CamelHuskPet::new);
+        addCreator(EntityType.COPPER_GOLEM, CopperGolemPet::new);
+        addCreator(EntityType.NAUTILUS, NautilusPet::new);
+        addCreator(EntityType.ZOMBIE_NAUTILUS, ZombieNautilusPet::new);
 
         addCreator(EntityType.BEE, BeePet::new);
         addCreator(EntityType.BLAZE, BlazePet::new);
@@ -45,11 +51,14 @@ public class EntityInjector {
         addCreator(EntityType.CREEPER, CreeperPet::new);
         addCreator(EntityType.DONKEY, DonkeyPet::new);
         addCreator(EntityType.DROWNED, DrownedPet::new);
+        addCreator(EntityType.DOLPHIN, DolphinPet::new);
         addCreator(EntityType.ENDERMITE, EndermitePet::new);
         addCreator(EntityType.ENDERMAN, EndermanPet::new);
         addCreator(EntityType.EVOKER, EvokerPet::new);
         addCreator(EntityType.FOX, FoxPet::new);
         addCreator(EntityType.GHAST, GhastPet::new);
+        addCreator(EntityType.HAPPY_GHAST, HappyGhastPet::new);
+        addCreator(EntityType.GUARDIAN, GuardianPet::new);
         addCreator(EntityType.HORSE, HorsePet::new);
         addCreator(EntityType.HUSK, HuskPet::new);
         addCreator(EntityType.IRON_GOLEM, IronGolemPet::new);
@@ -60,6 +69,8 @@ public class EntityInjector {
         addCreator(EntityType.MOOSHROOM, MushroomCowPet::new);
         addCreator(EntityType.OCELOT, OcelotPet::new);
         addCreator(EntityType.PANDA, PandaPet::new);
+        addCreator(EntityType.PARCHED, ParchedPet::new);
+        addCreator(EntityType.PARROT, ParrotPet::new);
         addCreator(EntityType.PHANTOM, PhantomPet::new);
         addCreator(EntityType.PIG, PigPet::new);
         addCreator(EntityType.PILLAGER, PillagerPet::new);
@@ -71,9 +82,11 @@ public class EntityInjector {
         addCreator(EntityType.SKELETON, SkeletonPet::new);
         addCreator(EntityType.SKELETON_HORSE, SkeletonHorsePet::new);
         addCreator(EntityType.SLIME, SlimePet::new);
+        addCreator(EntityType.SULFUR_CUBE, SulfurCubePet::new);
         addCreator(EntityType.SNOW_GOLEM, SnowGolemPet::new);
         addCreator(EntityType.SPIDER, SpiderPet::new);
         addCreator(EntityType.STRAY, StrayPet::new);
+        addCreator(EntityType.STRIDER, StriderPet::new);
         addCreator(EntityType.TRADER_LLAMA, TraderLlamaPet::new);
         addCreator(EntityType.TURTLE, TurtlePet::new);
         addCreator(EntityType.VEX, VexPet::new);

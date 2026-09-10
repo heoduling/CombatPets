@@ -11,5 +11,6 @@ import su.nightexpress.combatpets.nms.mc_26_2.brain.PetBrain;
 public class CreakingPet extends Creaking implements PetEntity {
     public CreakingPet(@NotNull ServerLevel level) { super(EntityTypes.get("creaking"), level); }
     @Override public void setGoals() { }
-    @Override protected Brain<Creaking> makeBrain(Brain.Packed packed) { return PetBrain.refreshBrain(this, super.makeBrain(packed)); }
+    @Override protected Brain<Creaking> makeBrain(Brain.Packed packed) { return PetBrain.makeBrain(this, packed); }
+    @Override protected void customServerAiStep(ServerLevel level) { PetBrain.tick(this, level, this.getBrain()); }
 }

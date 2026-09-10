@@ -1,7 +1,6 @@
 package su.nightexpress.combatpets.wardrobe.handler;
 
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Slime;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,9 +30,6 @@ public class SizeVariantHandler extends VariantHandler<Integer> {
         if (entity instanceof Slime slime) {
             return slime.getSize();
         }
-        if (entity instanceof Phantom phantom) {
-            return phantom.getSize();
-        }
 
         return null;
     }
@@ -56,9 +52,6 @@ public class SizeVariantHandler extends VariantHandler<Integer> {
 
         if (entity instanceof Slime slime) {
             slime.setSize(value);
-        }
-        if (entity instanceof Phantom phantom) {
-            phantom.setSize(value);
         }
 
         return false;

@@ -1,6 +1,7 @@
 package su.nightexpress.combatpets.shop.menu;
 
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -38,12 +39,12 @@ import java.util.stream.IntStream;
 import static su.nightexpress.combatpets.Placeholders.*;
 import static su.nightexpress.nightcore.util.text.tag.Tags.*;
 
-public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Template>, Linked<Tier> {
+public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<Template>, Linked<ShopEggsMenu.View> {
 
     private static final String FILE_NAME = "shop_pet_eggs.yml";
 
     private final ShopManager    shopManager;
-    private final ViewLink<Tier> link;
+    private final ViewLink<View> link;
     private final ItemHandler    returnHandler;
 
     private String       itemName;
@@ -56,7 +57,10 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
         this.link = new ViewLink<>();
 
         this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
-            this.runNextTick(() -> this.shopManager.openTiersMenu(viewer.getPlayer()));
+            View view = this.getLink(viewer);
+            if (view == null) return;
+
+            this.runNextTick(() -> this.shopManager.openTiersMenu(viewer.getPlayer(), view.proShop));
         }));
 
         this.load();
@@ -64,7 +68,7 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
 
     @NotNull
     @Override
-    public ViewLink<Tier> getLink() {
+    public ViewLink<View> getLink() {
         return link;
     }
 
@@ -80,7 +84,10 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
 
     @Override
     public void onAutoFill(@NotNull MenuViewer viewer, @NotNull AutoFill<Template> autoFill) {
-        Tier tier = this.getLink(viewer);
+        View view = this.getLink(viewer);
+        if (view == null) return;
+
+        Tier tier = view.tier;
 
         autoFill.setSlots(this.itemSlots);
         autoFill.setItems(this.plugin.getPetManager().getTemplates().stream()
@@ -92,9 +99,15 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
             if (price == null) return new ItemStack(Material.AIR);
 
             ItemStack item = PetUtils.getRawEggItem(petConfig);
+            List<String> lore = new ArrayList<>(this.itemLore);
+            if (petConfig.getEntityType() == EntityType.AXOLOTL) {
+                if (!lore.isEmpty()) lore.add("");
+                lore.add(LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("商店购买的美西螈固定为粉红色。")));
+                lore.add(LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("其他颜色需要在野外捕捉对应的美西螈。")));
+            }
             ItemReplacer.create(item).hideFlags().trimmed()
                 .setDisplayName(this.itemName)
-                .setLore(this.itemLore)
+                .setLore(lore)
                 .replace(petConfig.getPlaceholders())
                 .replace(tier.getPlaceholders())
                 .replace(GENERIC_PRICE, price.getCurrency().format(price.getPrice()))
@@ -103,14 +116,16 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
         });
 
         autoFill.setClickAction(config -> (viewer1, event) -> {
-            this.runNextTick(() -> this.shopManager.openEggPurchaseConfirm(viewer1.getPlayer(), config, tier));
+            this.runNextTick(() -> this.shopManager.openEggPurchaseConfirm(viewer1.getPlayer(), config, tier, view.proShop));
         });
     }
+
+    public record View(@NotNull Tier tier, boolean proShop) {}
 
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Egg Shop"), MenuSize.CHEST_36);
+        return Config.createMenuOptions(BLACK.enclose("宠物蛋商店"), MenuSize.CHEST_36);
     }
 
     @Override
@@ -120,19 +135,19 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
 
         ItemStack backItem = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
         ItemUtil.editMeta(backItem, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_BACK.getName());
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("返回")));
         });
         list.add(new MenuItem(backItem).setSlots(31).setPriority(10).setHandler(this.returnHandler));
 
         ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_PREVIOUS_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("← 上一页")));
         });
         list.add(new MenuItem(prevPage).setSlots(27).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
         ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_NEXT_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("下一页 →")));
         });
         list.add(new MenuItem(nextPage).setSlots(35).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
@@ -146,17 +161,17 @@ public class ShopEggsMenu extends ConfigMenu<PetsPlugin> implements AutoFilled<T
         ).read(cfg);
 
         this.itemLore = ConfigValue.create("Egg.Lore", Lists.newList(
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Inventory: ") + TIER_INVENTORY_HAS + " " + LIGHT_GRAY.enclose("(" + TIER_INVENTORY_SIZE + " slots)")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Equipment: ") + TIER_EQUIPMENT_HAS),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Max. Saturation: ") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.MAX_SATURATION)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("宠物背包：") + TIER_INVENTORY_HAS + " " + LIGHT_GRAY.enclose("(" + TIER_INVENTORY_SIZE + " 格)")),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("宠物装备：") + TIER_EQUIPMENT_HAS),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("最大饱食度：") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.MAX_SATURATION)),
             "",
-            LIGHT_YELLOW.enclose(BOLD.enclose("START ATTRIBUTES")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Damage: ") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.ATTACK_DAMAGE)),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Health: ") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.MAX_HEALTH)),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Defense: ") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.ARMOR)),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Speed: ") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.MOVEMENT_SPEED)),
+            LIGHT_YELLOW.enclose(BOLD.enclose("初始属性")),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("伤害：") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.ATTACK_DAMAGE)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("生命值：") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.MAX_HEALTH)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("防御：") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.ARMOR)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("速度：") + PET_CONFIG_ATTRIBUTE_START.apply(AttributeRegistry.MOVEMENT_SPEED)),
             "",
-            LIGHT_GRAY.enclose(LIGHT_GREEN.enclose("[▶]") + " Click to " + LIGHT_GREEN.enclose("purchase") + " for " + LIGHT_GREEN.enclose(GENERIC_PRICE) + ".")
+            LIGHT_GRAY.enclose(LIGHT_GREEN.enclose("[▶]") + " 点击花费 " + LIGHT_GREEN.enclose(GENERIC_PRICE) + " " + LIGHT_GREEN.enclose("购买") + "。")
         )).read(cfg);
 
         this.itemSlots = ConfigValue.create("Egg.Slots", IntStream.range(0, 27).toArray()).read(cfg);

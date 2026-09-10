@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import su.nightexpress.combatpets.PetsPlugin;
 import su.nightexpress.combatpets.api.pet.ActivePet;
 import su.nightexpress.combatpets.config.Config;
+import su.nightexpress.combatpets.hook.impl.LandsHook;
 import su.nightexpress.combatpets.pet.PetManager;
 import su.nightexpress.combatpets.util.PetScheduler;
 import su.nightexpress.combatpets.util.PetUtils;
@@ -55,6 +56,16 @@ public class CombatListener extends AbstractListener<PetsPlugin> {
 
         if (!this.petManager.canDamage(damager, victim)) {
             event.setCancelled(true);
+            return;
+        }
+
+        ActivePet activePet = this.petManager.getPetByMob(damager);
+        LandsHook landsHook = this.plugin.getLandsHook();
+        if (activePet != null && landsHook != null &&
+            !landsHook.canAttack(activePet.getOwner().getUniqueId(), victim)) {
+            event.setCancelled(true);
+            PetScheduler.runAtEntity(this.plugin, activePet.getEntity(), () ->
+                this.plugin.getPetNMS().clearTarget(activePet.getEntity()));
         }
     }
 

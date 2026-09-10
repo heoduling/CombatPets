@@ -41,6 +41,8 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
 
     private static final String FILE_NAME = "pet_collection.yml";
     private static final String STATUS = "%status%";
+    private static final String FILLER_ID = "filler";
+    private static final int[] FILLER_SLOTS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 27, 36, 45, 17, 26, 35, 44, 46, 47, 48, 49, 50, 51, 52, 53};
 
     private final ViewLink<Tier> link;
     private final ItemHandler    returnHandler;
@@ -55,7 +57,7 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
     private List<String> petStatusInactive;
 
     public CollectionMenu(@NotNull PetsPlugin plugin) {
-        super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
+        super(plugin, loadConfig(plugin));
         this.link = new ViewLink<>();
 
         this.addHandler(this.returnHandler = ItemHandler.forReturn(this, (viewer, event) -> {
@@ -65,6 +67,38 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
         this.load();
 
         this.getItems().forEach(PetUtils::applyMenuPlaceholders);
+    }
+
+    @NotNull
+    private static FileConfig loadConfig(@NotNull PetsPlugin plugin) {
+        FileConfig config = FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME);
+
+        if (!config.contains("Content." + FILLER_ID)
+            && config.contains("Content.Priority")
+            && config.contains("Content.Item.Material")
+            && Material.BLACK_STAINED_GLASS_PANE.name().equalsIgnoreCase(config.getString("Content.Item.Material"))
+            && config.contains("Content.Slots")
+            && config.contains("Content.Type")) {
+            config.remove("Content.Priority");
+            config.remove("Content.Item");
+            config.remove("Content.Slots");
+            config.remove("Content.Type");
+            config.set("Content." + FILLER_ID + ".Priority", 0);
+            config.setItem("Content." + FILLER_ID + ".Item", new ItemStack(Material.BLACK_STAINED_GLASS_PANE));
+            config.setIntArray("Content." + FILLER_ID + ".Slots", FILLER_SLOTS);
+            config.set("Content." + FILLER_ID + ".Type", "default");
+            config.saveChanges();
+        }
+
+        return config;
+    }
+
+    @Override
+    protected void writeItem(@NotNull MenuItem menuItem, @NotNull String path) {
+        if (path.equals(this.itemSection + ".")) {
+            path += FILLER_ID;
+        }
+        super.writeItem(menuItem, path);
     }
 
     @NotNull
@@ -141,11 +175,19 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
                 }
 
                 if (holder != null) {
-                    this.plugin.getPetManager().despawnPet(player);
-                    if (holder.getTemplate() == petData.getTemplate()) {
-                        this.runNextTick(() -> this.flush(viewer));
+                    if (holder.getTemplate() == petData.getTemplate() && holder.getTier() == petData.getTier()) {
+                        Tier selectedTier = petData.getTier();
+                        this.plugin.getPetManager().despawnPet(player,
+                            () -> this.plugin.getPetManager().openPetsCollection(player, selectedTier));
                         return;
                     }
+
+                    this.plugin.getPetManager().despawnPet(player, () -> {
+                        if (this.plugin.getPetManager().spawnPet(player, petData)) {
+                            player.closeInventory();
+                        }
+                    });
+                    return;
                 }
                 this.plugin.getPetManager().spawnPet(player, petData);
                 this.runNextTick(player::closeInventory);
@@ -167,7 +209,7 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Pet Collection"), MenuSize.CHEST_54);
+        return Config.createMenuOptions(BLACK.enclose("宠物收藏"), MenuSize.CHEST_54);
     }
 
     @Override
@@ -176,23 +218,23 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
         List<MenuItem> list = new ArrayList<>();
 
         ItemStack filler = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        list.add(new MenuItem(filler).setSlots(0,1,2,3,4,5,6,7,8,9,18,27,36,45,17,26,35,44,46,47,48,49,50,51,52,53));
+        list.add(new MenuItem(filler).setSlots(FILLER_SLOTS));
 
         ItemStack backItem = ItemUtil.getSkinHead(SKIN_ARROW_DOWN);
         ItemUtil.editMeta(backItem, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_BACK.getName());
+            meta.setDisplayName(LIGHT_YELLOW.enclose(BOLD.enclose("返回")));
         });
         list.add(new MenuItem(backItem).setSlots(49).setPriority(10).setHandler(this.returnHandler));
 
         ItemStack prevPage = ItemUtil.getSkinHead(SKIN_ARROW_LEFT);
         ItemUtil.editMeta(prevPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_PREVIOUS_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("← 上一页")));
         });
         list.add(new MenuItem(prevPage).setSlots(45).setPriority(10).setHandler(ItemHandler.forPreviousPage(this)));
 
         ItemStack nextPage = ItemUtil.getSkinHead(SKIN_ARROW_RIGHT);
         ItemUtil.editMeta(nextPage, meta -> {
-            meta.setDisplayName(CoreLang.MENU_ICON_NEXT_PAGE.getName());
+            meta.setDisplayName(WHITE.enclose(BOLD.enclose("下一页 →")));
         });
         list.add(new MenuItem(nextPage).setSlots(53).setPriority(10).setHandler(ItemHandler.forNextPage(this)));
 
@@ -207,18 +249,18 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
 
         this.petLore = ConfigValue.create("Pet.Lore", Lists.newList(
             "",
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Level: ") + PET_LEVEL),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("XP: ") + PET_XP + LIGHT_GRAY.enclose("/") + PET_REQUIRED_XP),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Saturation: ") + PET_SATURATION + LIGHT_GRAY.enclose("/") + PET_MAX_SATURATION),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Food: ") + PET_FOOD),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("等级：") + PET_LEVEL),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("经验：") + PET_XP + LIGHT_GRAY.enclose("/") + PET_REQUIRED_XP),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("饱食度：") + PET_SATURATION + LIGHT_GRAY.enclose("/") + PET_MAX_SATURATION),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("食物：") + PET_FOOD),
             "",
-            LIGHT_YELLOW.enclose(BOLD.enclose("ATTRIBUTES")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Damage: ") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_DAMAGE)),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Attack Speed: ") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_SPEED) + LIGHT_GRAY.enclose("/ sec.")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Health: ") + PET_ATTRIBUTE.apply(AttributeRegistry.MAX_HEALTH)),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Regen: ") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_FORCE) + LIGHT_GRAY.enclose(" x ") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_SPEED) + LIGHT_GRAY.enclose(" / sec.")),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Defense: ") + PET_ATTRIBUTE.apply(AttributeRegistry.ARMOR)),
-            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("Speed: W: ") + PET_ATTRIBUTE.apply(AttributeRegistry.MOVEMENT_SPEED) + LIGHT_GRAY.enclose(" / F: ") + PET_ATTRIBUTE.apply(AttributeRegistry.FLYING_SPEED)),
+            LIGHT_YELLOW.enclose(BOLD.enclose("属性")),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("伤害：") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_DAMAGE)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("攻击速度：") + PET_ATTRIBUTE.apply(AttributeRegistry.ATTACK_SPEED) + LIGHT_GRAY.enclose("/秒")),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("生命值：") + PET_ATTRIBUTE.apply(AttributeRegistry.MAX_HEALTH)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("生命恢复：") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_FORCE) + LIGHT_GRAY.enclose(" x ") + PET_ATTRIBUTE.apply(AttributeRegistry.HEALTH_REGENEATION_SPEED) + LIGHT_GRAY.enclose("/秒")),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("防御：") + PET_ATTRIBUTE.apply(AttributeRegistry.ARMOR)),
+            LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("速度：地面 ") + PET_ATTRIBUTE.apply(AttributeRegistry.MOVEMENT_SPEED) + LIGHT_GRAY.enclose(" / 飞行 ") + PET_ATTRIBUTE.apply(AttributeRegistry.FLYING_SPEED)),
 //                "",
 //                LIGHT_YELLOW.enclose(BOLD.enclose("ASPECTS")),
 //                LIGHT_YELLOW.enclose("▪ #ddeceeStrength: %pet_aspect_strength%"),
@@ -230,29 +272,29 @@ public class CollectionMenu extends ConfigMenu<PetsPlugin> implements AutoFilled
         )).read(cfg);
 
         this.petStatusDeadAuto = ConfigValue.create("Pet.Status.Dead_Auto", Lists.newList(
-            LIGHT_GRAY.enclose("Status: " + LIGHT_RED.enclose(BOLD.enclose("Dead"))),
-            LIGHT_GRAY.enclose("Ressurection in: " + LIGHT_RED.enclose(GENERIC_TIME)),
+            LIGHT_GRAY.enclose("状态：" + LIGHT_RED.enclose(BOLD.enclose("已死亡"))),
+            LIGHT_GRAY.enclose("自动复活倒计时：" + LIGHT_RED.enclose(GENERIC_TIME)),
             "",
-            LIGHT_RED.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to revive it for " + LIGHT_RED.enclose("$" + GENERIC_COST) + ".")
+            LIGHT_RED.enclose("[▶] ") + LIGHT_GRAY.enclose("点击花费 " + LIGHT_RED.enclose("$" + GENERIC_COST) + " 立即复活。")
         )).read(cfg);
 
         this.petStatusDeadManual = ConfigValue.create("Pet.Status.Dead_Manual", Lists.newList(
-            LIGHT_GRAY.enclose("Status: " + LIGHT_RED.enclose(BOLD.enclose("Dead"))),
+            LIGHT_GRAY.enclose("状态：" + LIGHT_RED.enclose(BOLD.enclose("已死亡"))),
             "",
-            LIGHT_RED.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to revive it for " + LIGHT_RED.enclose("$" + GENERIC_COST) + ".")
+            LIGHT_RED.enclose("[▶] ") + LIGHT_GRAY.enclose("点击花费 " + LIGHT_RED.enclose("$" + GENERIC_COST) + " 复活。")
         )).read(cfg);
 
         this.petStatusActive = ConfigValue.create("Pet.Status.Active", Lists.newList(
-            LIGHT_GRAY.enclose("Status: " + LIGHT_GREEN.enclose(BOLD.enclose("Summoned"))),
+            LIGHT_GRAY.enclose("状态：" + LIGHT_GREEN.enclose(BOLD.enclose("已召唤"))),
             "",
-            LIGHT_GREEN.enclose("[▶] ") + LIGHT_GRAY.enclose("Click to " + LIGHT_GREEN.enclose("despawn") + ".")
+            LIGHT_GREEN.enclose("[▶] ") + LIGHT_GRAY.enclose("点击" + LIGHT_GREEN.enclose("收回") + "宠物。")
         )).read(cfg);
 
         this.petStatusInactive = ConfigValue.create("Pet.Status.Inactive", Lists.newList(
-            LIGHT_GRAY.enclose("Status: " + LIGHT_YELLOW.enclose(BOLD.enclose("Idle"))),
+            LIGHT_GRAY.enclose("状态：" + LIGHT_YELLOW.enclose(BOLD.enclose("未召唤"))),
             "",
-            LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("Left-Click to " + LIGHT_YELLOW.enclose("summon") + "."),
-            LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("[Q/Drop] key to " + LIGHT_YELLOW.enclose("release") + ".")
+            LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("左键点击" + LIGHT_YELLOW.enclose("召唤") + "。"),
+            LIGHT_YELLOW.enclose("[▶] ") + LIGHT_GRAY.enclose("按 [Q/丢弃键] " + LIGHT_YELLOW.enclose("放生") + "。")
         )).read(cfg);
 
         this.petSlots = ConfigValue.create("Pets.Slots",

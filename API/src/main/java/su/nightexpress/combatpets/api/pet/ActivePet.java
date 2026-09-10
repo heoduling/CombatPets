@@ -27,6 +27,9 @@ public interface ActivePet extends Placeholder, InventoryHolder {
 
     void remove();
 
+    /** Saves and removes the pet using only pet-entity-owned state. */
+    void removeForShutdown();
+
     void onLevelUp();
 
     void onLevelDowngrade();
@@ -85,6 +88,9 @@ public interface ActivePet extends Placeholder, InventoryHolder {
     void doFeed(double amount);
 
     void moveToOwner();
+
+    /** Returns a habitat-incompatible pet to its owner's collection. */
+    void returnToCollection();
 
     void resetLeveling();
 

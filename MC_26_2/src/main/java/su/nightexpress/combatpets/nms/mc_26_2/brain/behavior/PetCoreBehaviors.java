@@ -3,9 +3,9 @@ package su.nightexpress.combatpets.nms.mc_26_2.brain.behavior;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.behavior.Behavior;
 import net.minecraft.world.entity.ai.behavior.LookAtTargetSink;
+import net.minecraft.world.entity.ai.behavior.MoveToTargetSink;
 import net.minecraft.world.entity.ai.behavior.Swim;
 import org.jetbrains.annotations.NotNull;
-import su.nightexpress.combatpets.nms.mc_26_2.brain.behavior.impl.MoveToTarget;
 
 public class PetCoreBehaviors {
 
@@ -16,7 +16,7 @@ public class PetCoreBehaviors {
 
     @NotNull
     public static Behavior<Mob> moveToTarget() {
-        return new MoveToTarget();
+        return new MoveToTargetSink();
     }
 
     @NotNull

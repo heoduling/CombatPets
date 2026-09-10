@@ -4,4 +4,5 @@ public class HookId {
 
     public static final String MYTHIC_MOBS    = "MythicMobs";
     public static final String LEVELLED_MOBS = "LevelledMobs";
+    public static final String LANDS          = "Lands";
 }

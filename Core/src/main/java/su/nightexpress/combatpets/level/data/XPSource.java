@@ -10,10 +10,7 @@ import su.nightexpress.nightcore.util.Lists;
 import su.nightexpress.nightcore.util.random.Rnd;
 import su.nightexpress.nightcore.util.wrapper.UniInt;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class XPSource {
 
@@ -66,7 +63,7 @@ public class XPSource {
 
     @NotNull
     public static Map<String, XPSource> getDefaults() {
-        Map<String, XPSource> map = new HashMap<>();
+        Map<String, XPSource> map = new LinkedHashMap<>();
 
         Set<String> animalNames = new HashSet<>();
         Set<String> illagerNames = new HashSet<>();
@@ -97,6 +94,29 @@ public class XPSource {
         map.put("monsters", new XPSource(UniInt.of(20, 60), 50, monsterNames));
         map.put("illagers", new XPSource(UniInt.of(30, 70), 70, illagerNames));
         map.put("others", new XPSource(UniInt.of(25, 50), 65, otherNames));
+        map.putAll(getSupplementalDefaults());
         return map;
+    }
+
+    @NotNull
+    public static Map<String, XPSource> getSupplementalDefaults() {
+        Map<String, XPSource> map = new LinkedHashMap<>();
+        map.put("passive_specials", new XPSource(UniInt.of(3, 12), 30, mobSet(
+            "allay", "bat", "copper_golem", "snow_golem", "villager", "wandering_trader"
+        )));
+        map.put("aquatic_wildlife", new XPSource(UniInt.of(4, 16), 35, mobSet(
+            "cod", "glow_squid", "salmon", "squid", "tadpole", "tropical_fish"
+        )));
+        map.put("aquatic_defensive", new XPSource(UniInt.of(7, 22), 40, mobSet(
+            "dolphin", "pufferfish"
+        )));
+        map.put("iron_golem", new XPSource(UniInt.of(25, 60), 60, mobSet("iron_golem")));
+        map.put("sulfur_cube", new XPSource(UniInt.of(4, 14), 35, mobSet("sulfur_cube")));
+        return map;
+    }
+
+    @NotNull
+    private static Set<String> mobSet(@NotNull String... names) {
+        return new LinkedHashSet<>(List.of(names));
     }
 }

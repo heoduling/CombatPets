@@ -1,6 +1,8 @@
 package su.nightexpress.combatpets.pet.listener;
 
+import com.destroystokyo.paper.event.entity.WitchConsumePotionEvent;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,6 +37,16 @@ public class PetGenericListener extends AbstractListener<PetsPlugin> {
         this.petManager = petManager;
     }
 
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPetWitchConsumePotion(WitchConsumePotionEvent event) {
+        ActivePet activePet = this.petManager.getPetByMob(event.getEntity());
+        if (activePet == null) return;
+
+        // Vanilla has already cleared the temporary potion from the main hand.
+        // Restore the equipment kept in PetData without changing potion effects.
+        activePet.equipPet();
+    }
+
 //    @EventHandler(priority = EventPriority.MONITOR)
 //    public void onLazyPetsLoad(PlayerJoinEvent event) {
 //        Player player = event.getPlayer();
@@ -51,7 +63,13 @@ public class PetGenericListener extends AbstractListener<PetsPlugin> {
     public void onPetDeath(EntityDeathEvent event) {
         LivingEntity entity = event.getEntity();
         ActivePet activePet = this.petManager.getPetByMob(entity);
-        if (activePet == null) return;
+        if (activePet == null) {
+            if (this.petManager.isPetEntity(entity)) {
+                event.getDrops().clear();
+                event.setDroppedExp(0);
+            }
+            return;
+        }
 
         PetDeathEvent deathEvent = new PetDeathEvent(activePet, event);
         deathEvent.setPermanentDeath(Config.PET_PERMANENT_DEATH.get());
@@ -65,12 +83,14 @@ public class PetGenericListener extends AbstractListener<PetsPlugin> {
             deathEvent.setDropEquipment(true);
         }
 
+        // Capture the contents before handleDeath() removes and clears the pet.
+        ItemStack[] inventoryContents = activePet.getInventory().getContents();
+
         plugin.getPetManager().handleDeath(activePet);
         plugin.getPluginManager().callEvent(deathEvent);
 
         if (deathEvent.isDropInventory()) {
-            event.getDrops().addAll(Arrays.asList(activePet.getInventory().getContents()));
-            activePet.getInventory().clear();
+            event.getDrops().addAll(Arrays.asList(inventoryContents));
         }
 
         if (deathEvent.isDropEquipment()) {
@@ -85,6 +105,19 @@ public class PetGenericListener extends AbstractListener<PetsPlugin> {
             Player owner = activePet.getOwner();
             PetUser user = plugin.getUserManager().getOrFetch(owner);
             this.petManager.removeFromCollection(user, activePet.getTier(), activePet.getTemplate());
+        }
+    }
+
+    /**
+     * Pets must never be replaced by vanilla entity transformations. A
+     * transformation creates a new entity with a new UUID, which would break
+     * the in-memory pet bridge, owner protection and the health bar.
+     */
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onPetTransform(EntityTransformEvent event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
+        if (this.petManager.isPetEntity(entity)) {
+            event.setCancelled(true);
         }
     }
 
@@ -137,9 +170,22 @@ public class PetGenericListener extends AbstractListener<PetsPlugin> {
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onPetVanillaPortal(EntityPortalEvent event) {
-        if (event.getEntity() instanceof LivingEntity livingEntity) {
-            event.setCancelled(this.petManager.isPetEntity(livingEntity));
+        if (this.containsPet(event.getEntity())) {
+            event.setCancelled(true);
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPetVanillaPortalEnter(EntityPortalEnterEvent event) {
+        if (this.containsPet(event.getEntity())) {
+            event.setCancelled(true);
+        }
+    }
+
+    private boolean containsPet(@NotNull Entity entity) {
+        if (entity instanceof LivingEntity livingEntity && this.petManager.isPetEntity(livingEntity)) return true;
+
+        return entity.getPassengers().stream().anyMatch(this::containsPet);
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -170,7 +216,9 @@ public class PetGenericListener extends AbstractListener<PetsPlugin> {
         LivingEntity entity = PetUtils.getParent(event.getEntity());
         if (entity == null) return;
 
-        event.setCancelled(this.petManager.isPetEntity(entity));
+        if (this.petManager.isPetEntity(entity)) {
+            event.blockList().clear();
+        }
     }
 
     @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)

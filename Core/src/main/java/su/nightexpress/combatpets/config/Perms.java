@@ -1,6 +1,7 @@
 package su.nightexpress.combatpets.config;
 
 import su.nightexpress.combatpets.Placeholders;
+import org.bukkit.permissions.PermissionDefault;
 import su.nightexpress.nightcore.util.wrapper.UniPermission;
 
 public class Perms {
@@ -15,6 +16,11 @@ public class Perms {
     public static final UniPermission BYPASS  = new UniPermission(PREFIX_BYPASS + Placeholders.WILDCARD);
     public static final UniPermission CAPTURE = new UniPermission(PREFIX_CAPTURE + Placeholders.WILDCARD);
 
+    public static final UniPermission COMMAND_ADMIN                 = new UniPermission(PREFIX_COMMAND + "admin");
+    public static final UniPermission COMMAND_ADMIN_SHOP             = new UniPermission(PREFIX_COMMAND + "admin.shop");
+    public static final UniPermission COMMAND_ADMIN_PRO_SHOP         = new UniPermission(PREFIX_COMMAND + "admin.proshop");
+    public static final UniPermission COMMAND_ADMIN_ATTRIBUTES       = new UniPermission(PREFIX_COMMAND + "admin.attributes");
+    public static final UniPermission COMMAND_ADMIN_MENU             = new UniPermission(PREFIX_COMMAND + "admin.menu");
     public static final UniPermission COMMAND_ADD                   = new UniPermission(PREFIX_COMMAND + "add");
     public static final UniPermission COMMAND_ADD_ALL               = new UniPermission(PREFIX_COMMAND + "addall");
     public static final UniPermission COMMAND_REMOVE                = new UniPermission(PREFIX_COMMAND + "remove");
@@ -22,11 +28,11 @@ public class Perms {
     public static final UniPermission COMMAND_FOOD                  = new UniPermission(PREFIX_COMMAND + "food");
     public static final UniPermission COMMAND_EGG                   = new UniPermission(PREFIX_COMMAND + "egg");
     public static final UniPermission COMMAND_MYSTERY_EGG           = new UniPermission(PREFIX_COMMAND + "mysteryegg");
-    public static final UniPermission COMMAND_SHOP                  = new UniPermission(PREFIX_COMMAND + "shop");
+    public static final UniPermission COMMAND_SHOP                  = new UniPermission(PREFIX_COMMAND + "shop", PermissionDefault.TRUE);
     public static final UniPermission COMMAND_CAPTURE_ITEM          = new UniPermission(PREFIX_COMMAND + "captureitem");
-    public static final UniPermission COMMAND_COLLECTION            = new UniPermission(PREFIX_COMMAND + "collection");
+    public static final UniPermission COMMAND_COLLECTION            = new UniPermission(PREFIX_COMMAND + "collection", PermissionDefault.TRUE);
     public static final UniPermission COMMAND_ACCESSORY             = new UniPermission(PREFIX_COMMAND + "accessory");
-    public static final UniPermission COMMAND_MENU                  = new UniPermission(PREFIX_COMMAND + "menu");
+    public static final UniPermission COMMAND_MENU                  = new UniPermission(PREFIX_COMMAND + "menu", PermissionDefault.TRUE);
     public static final UniPermission COMMAND_RENAME                = new UniPermission(PREFIX_COMMAND + "rename");
     public static final UniPermission COMMAND_REVIVE                = new UniPermission(PREFIX_COMMAND + "revive");
     public static final UniPermission COMMAND_CLEAR_INVENTORY       = new UniPermission(PREFIX_COMMAND + "clearinventory");
@@ -53,6 +59,11 @@ public class Perms {
         PLUGIN.addChildren(COMMAND, BYPASS, CAPTURE);
 
         COMMAND.addChildren(
+            COMMAND_ADMIN,
+            COMMAND_ADMIN_SHOP,
+            COMMAND_ADMIN_PRO_SHOP,
+            COMMAND_ADMIN_ATTRIBUTES,
+            COMMAND_ADMIN_MENU,
             COMMAND_ADD,
             COMMAND_ADD_ALL,
             COMMAND_REMOVE,

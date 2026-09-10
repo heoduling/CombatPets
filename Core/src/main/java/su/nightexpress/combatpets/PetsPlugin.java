@@ -1,16 +1,23 @@
 package su.nightexpress.combatpets;
 
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import su.nightexpress.combatpets.capture.CaptureManager;
 import su.nightexpress.combatpets.capture.command.CaptureCommands;
 import su.nightexpress.combatpets.command.impl.AspectPointsCommands;
 import su.nightexpress.combatpets.command.impl.BaseCommands;
 import su.nightexpress.combatpets.config.Config;
+import su.nightexpress.combatpets.config.ChineseConfigMigration;
 import su.nightexpress.combatpets.config.Keys;
 import su.nightexpress.combatpets.config.Lang;
+import su.nightexpress.combatpets.config.NightcoreChineseLocale;
 import su.nightexpress.combatpets.config.Perms;
+import su.nightexpress.combatpets.config.PluginConfigMigration;
 import su.nightexpress.combatpets.data.DataHandler;
 import su.nightexpress.combatpets.data.UserManager;
+import su.nightexpress.combatpets.hook.HookId;
+import su.nightexpress.combatpets.hook.impl.LandsHook;
 import su.nightexpress.combatpets.hook.impl.PlaceholderHook;
 import su.nightexpress.combatpets.item.ItemManager;
 import su.nightexpress.combatpets.level.LevelingManager;
@@ -27,11 +34,14 @@ import su.nightexpress.combatpets.shop.command.ShopCommands;
 import su.nightexpress.combatpets.wardrobe.WardrobeManager;
 import su.nightexpress.combatpets.wardrobe.command.WardrobeCommands;
 import su.nightexpress.combatpets.util.PetScheduler;
+import su.nightexpress.nightcore.NightCore;
 import su.nightexpress.nightcore.NightPlugin;
 import su.nightexpress.nightcore.commands.command.NightCommand;
 import su.nightexpress.nightcore.config.PluginDetails;
 import su.nightexpress.nightcore.util.Plugins;
 import su.nightexpress.nightcore.util.Version;
+
+import java.io.File;
 
 public class PetsPlugin extends NightPlugin {
 
@@ -44,6 +54,7 @@ public class PetsPlugin extends NightPlugin {
     private CaptureManager  captureManager;
     private WardrobeManager wardrobeManager;
     private ShopManager     shopManager;
+    private LandsHook       landsHook;
 
     private PetNMS petNMS;
 
@@ -59,6 +70,19 @@ public class PetsPlugin extends NightPlugin {
     protected void addRegistries() {
         super.addRegistries();
 
+        NightcoreChineseLocale.install(this);
+
+        if (this.getDetails().getLanguage().equalsIgnoreCase("zh")) {
+            File localeFile = new File(this.getDataFolder(), "lang/lang_zh.yml");
+            File messagesFile = new File(this.getDataFolder(), "lang/messages_zh.yml");
+
+            if (!localeFile.isFile() && !messagesFile.isFile()) {
+                this.saveResource("lang/messages_zh.yml", false);
+            }
+
+            ChineseConfigMigration.migrateLocale(this);
+        }
+
         this.registerLang(Lang.class);
     }
 
@@ -68,12 +92,21 @@ public class PetsPlugin extends NightPlugin {
     }
 
     @Override
+    protected void loadManagers() {
+        super.loadManagers();
+        ChineseConfigMigration.translateComments(this);
+    }
+
+    @Override
     public void enable() {
         PetScheduler.initialize();
         PetAPI.setup(this);
 
+        PluginConfigMigration.migrate(this);
+        ChineseConfigMigration.migrate(this);
+
         if (!this.setupNMS()) {
-            this.error("Unsupported server version!");
+            this.error("不支持当前服务端版本！");
             this.getPluginManager().disablePlugin(this);
             return;
         }
@@ -114,6 +147,8 @@ public class PetsPlugin extends NightPlugin {
             this.shopManager.setup();
         }
 
+        this.itemManager.migrateOnlineEggs();
+
         this.loadHooks();
         this.loadCommands();
     }
@@ -122,6 +157,10 @@ public class PetsPlugin extends NightPlugin {
         if (Plugins.hasPlaceholderAPI()) {
             PlaceholderHook.setup(this);
         }
+        if (Plugins.isLoaded(HookId.LANDS)) {
+            this.landsHook = LandsHook.create(this);
+            if (this.landsHook != null) this.info("已启用 Lands 领地兼容。");
+        }
     }
 
     @Override
@@ -129,6 +168,7 @@ public class PetsPlugin extends NightPlugin {
         if (Plugins.hasPlaceholderAPI()) {
             PlaceholderHook.shutdown();
         }
+        this.landsHook = null;
 
         if (this.levelingManager != null) this.levelingManager.shutdown();
         if (this.shopManager != null) this.shopManager.shutdown();
@@ -140,6 +180,24 @@ public class PetsPlugin extends NightPlugin {
         if (this.dataHandler != null) this.dataHandler.shutdown();
 
         PetAPI.shutdown();
+    }
+
+    @Override
+    protected void onShutdown() {
+        NightCore.CHILDRENS.remove(this);
+
+        synchronized (Bukkit.getHelpMap()) {
+            Bukkit.getHelpMap().getHelpTopics().removeIf(topic -> {
+                String name = topic.getName();
+                return name.equalsIgnoreCase("CombatPets")
+                    || name.equalsIgnoreCase("/pets")
+                    || name.equalsIgnoreCase("/pet")
+                    || name.equalsIgnoreCase("/combatpets")
+                    || name.equalsIgnoreCase("/combatpets:pets")
+                    || name.equalsIgnoreCase("/combatpets:pet")
+                    || name.equalsIgnoreCase("/combatpets:combatpets");
+            });
+        }
     }
 
     private void loadCommands() {
@@ -212,5 +270,10 @@ public class PetsPlugin extends NightPlugin {
 
     public ShopManager getShopManager() {
         return this.shopManager;
+    }
+
+    @Nullable
+    public LandsHook getLandsHook() {
+        return this.landsHook;
     }
 }

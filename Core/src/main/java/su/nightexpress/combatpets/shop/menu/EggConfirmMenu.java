@@ -1,6 +1,7 @@
 package su.nightexpress.combatpets.shop.menu;
 
 import org.bukkit.entity.Player;
+import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +50,7 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
     private List<String> iconLore;
     private int          iconSlot;
 
-    public record BuyInfo(@NotNull Template template, @NotNull Tier tier) {}
+    public record BuyInfo(@NotNull Template template, @NotNull Tier tier, boolean proShop) {}
 
     public EggConfirmMenu(@NotNull PetsPlugin plugin, @NotNull ShopManager shopManager) {
         super(plugin, FileConfig.loadOrExtract(plugin, Config.DIR_MENU, FILE_NAME));
@@ -64,6 +65,11 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
 
             Template template = buyInfo.template;
             Tier tier = buyInfo.tier;
+
+            if (!this.shopManager.canPurchaseEgg(player, tier, template, buyInfo.proShop)) {
+                this.runNextTick(player::closeInventory);
+                return;
+            }
 
             EggPrice price = this.shopManager.getEggPrice(tier, template);
             if (price == null) return;
@@ -96,8 +102,9 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
         this.addHandler(this.declineHandler = new ItemHandler("cancel", (viewer, event) -> {
             Player player = viewer.getPlayer();
             BuyInfo buyInfo = this.getLink(player);
+            if (buyInfo == null) return;
 
-            this.runNextTick(() -> this.shopManager.openEggsMenu(player, buyInfo.tier));
+            this.runNextTick(() -> this.shopManager.openEggsMenu(player, buyInfo.tier, buyInfo.proShop));
         }));
 
         this.load();
@@ -128,9 +135,15 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
         Tier tier = buyInfo.tier;
 
         ItemStack item = PetUtils.getRawEggItem(template);
+        List<String> lore = new ArrayList<>(this.iconLore);
+        if (template.getEntityType() == EntityType.AXOLOTL) {
+            if (!lore.isEmpty()) lore.add("");
+            lore.add(LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("商店购买的美西螈固定为粉红色。")));
+            lore.add(LIGHT_YELLOW.enclose("▪ " + LIGHT_GRAY.enclose("其他颜色需要在野外捕捉对应的美西螈。")));
+        }
         ItemReplacer.create(item).hideFlags().trimmed()
             .setDisplayName(this.iconName)
-            .setLore(this.iconLore)
+            .setLore(lore)
             .replace(template.getPlaceholders())
             .replace(tier.getPlaceholders())
             .writeMeta();
@@ -150,7 +163,7 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
     @Override
     @NotNull
     protected MenuOptions createDefaultOptions() {
-        return new MenuOptions(BLACK.enclose("Are you sure?"), MenuSize.CHEST_9);
+        return Config.createMenuOptions(BLACK.enclose("确认购买吗？"), MenuSize.CHEST_9);
     }
 
     @Override
@@ -160,20 +173,20 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
 
         ItemStack acceptItem = ItemUtil.getSkinHead(SKIN_CHECK_MARK);
         ItemUtil.editMeta(acceptItem, meta -> {
-            meta.setDisplayName(LIGHT_GREEN.enclose(BOLD.enclose("Yes")));
+            meta.setDisplayName(LIGHT_GREEN.enclose(BOLD.enclose("确认购买")));
             meta.setLore(Lists.newList(
-                LIGHT_GRAY.enclose("Yes, I'm sure!"),
+                LIGHT_GRAY.enclose("确认购买这枚宠物蛋。"),
                 "",
-                LIGHT_GRAY.enclose(LIGHT_GREEN.enclose("[▶]") + " Click to " + LIGHT_GREEN.enclose("purchase") + " for " + LIGHT_GREEN.enclose(GENERIC_PRICE) + ".")
+                LIGHT_GRAY.enclose(LIGHT_GREEN.enclose("[▶]") + " 点击花费 " + LIGHT_GREEN.enclose(GENERIC_PRICE) + " " + LIGHT_GREEN.enclose("购买") + "。")
             ));
         });
         list.add(new MenuItem(acceptItem).setPriority(10).setSlots(8).setHandler(this.acceptHandler));
 
         ItemStack denyItem = ItemUtil.getSkinHead(SKIN_WRONG_MARK);
         ItemUtil.editMeta(denyItem, meta -> {
-            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("No")));
+            meta.setDisplayName(LIGHT_RED.enclose(BOLD.enclose("取消")));
             meta.setLore(Lists.newList(
-                LIGHT_GRAY.enclose("No, I changed my mind.")
+                LIGHT_GRAY.enclose("返回宠物蛋商店。")
             ));
         });
         list.add(new MenuItem(denyItem).setPriority(10).setSlots(0).setHandler(this.declineHandler));
@@ -184,7 +197,7 @@ public class EggConfirmMenu extends ConfigMenu<PetsPlugin> implements Linked<Egg
     @Override
     protected void loadAdditional() {
         this.iconName = ConfigValue.create("PetIcon.Name",
-            LIGHT_YELLOW.enclose(BOLD.enclose("Purchase: ")) + WHITE.enclose(TEMPLATE_DEFAULT_NAME) + " " + LIGHT_GRAY.enclose("(" + TIER_NAME + ")")
+            LIGHT_YELLOW.enclose(BOLD.enclose("购买：")) + WHITE.enclose(TEMPLATE_DEFAULT_NAME) + " " + LIGHT_GRAY.enclose("(" + TIER_NAME + ")")
         ).read(cfg);
 
         this.iconLore = ConfigValue.create("PetIcon.Lore", Lists.newList(
